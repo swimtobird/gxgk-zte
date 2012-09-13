@@ -1,0 +1,81 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: Luzj_ZTE - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating command line "rc.exe /l 0x804 /fo"Debug/Luzj_ZTE.res" /d "_DEBUG" /d "_AFXDLL" "E:\Develop\Source\zte-client\zte-client-win\Luzj_ZTE.rc"" 
+Creating temporary file "C:\DOCUME~1\share\LOCALS~1\Temp\RSP143.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FR"Debug/" /Fp"Debug/Luzj_ZTE.pch" /Yu"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /c 
+"E:\Develop\Source\zte-client\zte-client-win\Config.cpp"
+"E:\Develop\Source\zte-client\zte-client-win\HyperLink.cpp"
+"E:\Develop\Source\zte-client\zte-client-win\Luzj_ZTE.cpp"
+"E:\Develop\Source\zte-client\zte-client-win\Luzj_ZTEDlg.cpp"
+"E:\Develop\Source\zte-client\zte-client-win\Packet.cpp"
+"E:\Develop\Source\zte-client\zte-client-win\SettingDlg.cpp"
+"E:\Develop\Source\zte-client\zte-client-win\SystemTray.cpp"
+"E:\Develop\Source\zte-client\zte-client-win\WebAuth.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\share\LOCALS~1\Temp\RSP143.tmp" 
+Creating temporary file "C:\DOCUME~1\share\LOCALS~1\Temp\RSP144.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FR"Debug/" /Fp"Debug/Luzj_ZTE.pch" /Yc"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /c 
+"E:\Develop\Source\zte-client\zte-client-win\StdAfx.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\share\LOCALS~1\Temp\RSP144.tmp" 
+Creating temporary file "C:\DOCUME~1\share\LOCALS~1\Temp\RSP145.bat" with contents
+[
+@echo off
+BPP Define.h
+]
+Creating command line "C:\DOCUME~1\share\LOCALS~1\Temp\RSP145.bat"
+Compiling resources...
+Compiling...
+StdAfx.cpp
+Compiling...
+Config.cpp
+HyperLink.cpp
+Luzj_ZTE.cpp
+Luzj_ZTEDlg.cpp
+Packet.cpp
+SettingDlg.cpp
+E:\Develop\Source\zte-client\zte-client-win\SettingDlg.cpp(104) : warning C4800: 'unsigned int' : forcing value to bool 'true' or 'false' (performance warning)
+E:\Develop\Source\zte-client\zte-client-win\SettingDlg.cpp(105) : warning C4800: 'unsigned int' : forcing value to bool 'true' or 'false' (performance warning)
+E:\Develop\Source\zte-client\zte-client-win\SettingDlg.cpp(106) : warning C4800: 'unsigned int' : forcing value to bool 'true' or 'false' (performance warning)
+E:\Develop\Source\zte-client\zte-client-win\SettingDlg.cpp(107) : warning C4800: 'unsigned int' : forcing value to bool 'true' or 'false' (performance warning)
+SystemTray.cpp
+WebAuth.cpp
+Generating Code...
+Creating temporary file "C:\DOCUME~1\share\LOCALS~1\Temp\RSP146.tmp" with contents
+[
+/nologo /subsystem:windows /incremental:yes /pdb:"Debug/ZTE.pdb" /debug /machine:I386 /out:"Debug/ZTE.exe" /pdbtype:sept 
+".\Debug\Config.obj"
+".\Debug\HyperLink.obj"
+".\Debug\Luzj_ZTE.obj"
+".\Debug\Luzj_ZTEDlg.obj"
+".\Debug\Packet.obj"
+".\Debug\SettingDlg.obj"
+".\Debug\StdAfx.obj"
+".\Debug\SystemTray.obj"
+".\Debug\WebAuth.obj"
+".\Debug\Luzj_ZTE.res"
+]
+Creating command line "link.exe @C:\DOCUME~1\share\LOCALS~1\Temp\RSP146.tmp"
+
+Build++: Build number is 353 
+<h3>Output Window</h3>
+Linking...
+Creating command line "bscmake.exe /nologo /o"Debug/Luzj_ZTE.bsc"  ".\Debug\StdAfx.sbr" ".\Debug\Config.sbr" ".\Debug\HyperLink.sbr" ".\Debug\Luzj_ZTE.sbr" ".\Debug\Luzj_ZTEDlg.sbr" ".\Debug\Packet.sbr" ".\Debug\SettingDlg.sbr" ".\Debug\SystemTray.sbr" ".\Debug\WebAuth.sbr""
+Creating browse info file...
+<h3>Output Window</h3>
+
+
+
+<h3>Results</h3>
+ZTE.exe - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>
