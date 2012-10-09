@@ -105,6 +105,7 @@ void CSettingDlg::OnOK()
 	Config.m_bWebAuth = (bool)(IsDlgButtonChecked(IDC_CHK_WEB_AUTH));
 	Config.m_bAutorun = (bool)(IsDlgButtonChecked(IDC_CHK_AUTORUN));
 	Config.m_bShowBubble = (bool)(IsDlgButtonChecked(IDC_CHK_BUBBLE));
+	Config.m_bWebLogout = (bool)(IsDlgButtonChecked(IDC_CHK_WEB_LOGOUT));
 
 
 	GetDlgItem(IDC_TIMEOUT)->GetWindowText(szTemp,MAX_STRING);

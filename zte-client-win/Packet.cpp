@@ -114,8 +114,8 @@ int CPacket::send_packet_response_Identity(pcap_t * adapterHandle,const u_char *
 					0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 					0x00,0x00  //存放自己的账号，是ascii码
 				};
-	packet_response_Identity[17] = (u_char)m_usernameLen + 6;
-	packet_response_Identity[21] = (u_char)m_usernameLen + 6;
+	packet_response_Identity[17] = (u_char)m_usernameLen + 5;
+	packet_response_Identity[21] = (u_char)m_usernameLen + 5;
 
 	memcpy(packet_response_Identity+6,MacAdd,6);
 
@@ -158,8 +158,8 @@ int CPacket::send_packet_response_MD5(pcap_t * adapterHandle,const u_char* captu
 					/*40*/0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 						  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00//存放自己的账号，是ascii码，我校账号长度为11
 				};
-	packet_response_MD5[17] = (u_char)m_usernameLen + 23;
-	packet_response_MD5[21] = (u_char)m_usernameLen + 23;
+	packet_response_MD5[17] = (u_char)m_usernameLen + 22;
+	packet_response_MD5[21] = (u_char)m_usernameLen + 22;
 
 	memcpy(packet_response_MD5+6,MacAdd,6);
 
@@ -315,7 +315,6 @@ int CPacket::send_packet_key2(pcap_t * adapterHandle,const u_char* captured,u_ch
 	
 	//此包的index值，直接从接收包复制过来
 	packet_key2[45]=captured[45];
-
 
 	//////////////////////////////////////////////////////////////////////////
 	//使用rc4算法生成Key，基于（Key IV + Key IV最后四个字节）==20字节
