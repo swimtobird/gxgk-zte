@@ -572,8 +572,8 @@ DWORD WINAPI CLuzj_ZTEDlg::StartAuth(LPVOID pParam)
 	} 
 	else
 	{
-		Dlg->ChgBtn(TRUE,"服务器认证失败,可能是密码错误!");
-		Dlg->AddLog("服务器认证失败,可能是密码错误!");
+		Dlg->ChgBtn(TRUE,"服务器认证失败,请查看日志信息!");		
+		Dlg->AddLog(captured+24);
 		return 0;
 	}
 	//////////////////////////////////////////////////////////////////////////
