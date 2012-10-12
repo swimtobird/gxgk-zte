@@ -43,6 +43,10 @@ public:
 	bool m_bWebLogout;//是否进行网页注销
 	CString m_csWebLogoutUrl;//网页注销地址
 
+	bool m_bEnableWebAccount;//是否启用网页认证帐号信息，否则与中兴认证帐号一样
+	CString m_csWebUsername;//网页认证用户名
+	CString m_csWebPassword;//网页认证密码
+
 
 	CMap<int,int,userInfo,userInfo>   m_UserInfo;	//存放所有的账号密码信息
 

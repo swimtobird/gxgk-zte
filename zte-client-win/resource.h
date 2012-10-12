@@ -29,12 +29,15 @@
 #define IDC_CHK_BUBBLE                  1018
 #define IDC_WEBURL                      1019
 #define IDC_EMAILME                     1020
+#define IDC_CHK_ENABLE_WEBACCOUNT       1020
 #define IDC_VERSION                     1021
 #define IDC_TIMEOUT                     1023
 #define IDC_WEB_AUTH_URL                1024
 #define IDC_WEB_LOGOUT_URL              1025
 #define IDC_CHK_WEB_AUTH                1026
 #define IDC_CHK_WEB_LOGOUT              1027
+#define IDC_WEB_USERNAME                1028
+#define IDC_WEB_PASSWORD                1029
 
 // Next default values for new objects
 // 
