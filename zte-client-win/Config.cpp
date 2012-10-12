@@ -129,7 +129,7 @@ void CConfig::SaveConfig()
 	}
 	else
 	{
-		RegDeleteValue(hRun,"LuzjZte");
+		RegDeleteValue(hRun,"zte");
 	}
 	::RegCloseKey(hRun);
 
@@ -162,14 +162,12 @@ void CConfig::SaveConfig()
 		}
 	}
 
-	WritePrivateProfileString("config","WebUsername",str,m_csWebUsername);
-	WritePrivateProfileString("config","WebPassword",str,m_csWebPassword);
-
 	WritePrivateProfileString("config","username",str,pszFullPath);
 
 	WritePrivateProfileString("config","LastUser",m_csLastUser,pszFullPath);
 
-
+	WritePrivateProfileString("config","WebUsername",m_csWebUsername,pszFullPath);
+	WritePrivateProfileString("config","WebPassword",m_csWebPassword,pszFullPath);
 
 }
 void CConfig::LoadConfig()
