@@ -39,6 +39,9 @@ protected:
 	//{{AFX_MSG(CSettingDlg)
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
+	afx_msg void OnChkWebAuth();
+	afx_msg void OnChkWebLogout();
+	afx_msg void OnChkEnableWebaccount();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

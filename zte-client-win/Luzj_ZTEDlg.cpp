@@ -657,14 +657,18 @@ DWORD WINAPI CLuzj_ZTEDlg::StartAuth(LPVOID pParam)
 		char *msg;
 		int i;
 		for(i = 0; i < 3; i++) {
-			msg = WebAuth((const char *)Dlg->m_username, (const char *)Dlg->m_password, Dlg->m_ip, Config.m_csWebAuthUrl);
+			if(Config.m_bEnableWebAccount) {
+				msg = WebAuth(Config.m_csWebUsername, Config.m_csWebPassword, Dlg->m_ip, Config.m_csWebAuthUrl);
+			} else {
+				msg = WebAuth((const char *)Dlg->m_username, (const char *)Dlg->m_password, Dlg->m_ip, Config.m_csWebAuthUrl);
+			}
 			if(msg == NULL) {			
 				Dlg->AddLog("网页认证成功!");
 				break;
 			} else {				
 				Dlg->AddLog(msg);			
 			}
-			Sleep(1500);
+			Sleep(3000);
 		}
 		if(i >= 3) {
 			Dlg->ChgBtn(FALSE,"网页认证失败，请稍后手动进行网页认证!");

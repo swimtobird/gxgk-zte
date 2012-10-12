@@ -98,6 +98,9 @@ void CConfig::SaveConfig()
 	m_bShowBubble==TRUE?WritePrivateProfileString("config","ShowBubble","1",pszFullPath)
 					  :WritePrivateProfileString("config","ShowBubble","0",pszFullPath);
 
+	m_bEnableWebAccount ==TRUE?WritePrivateProfileString("config","EnableWebAccount","1",pszFullPath)
+					  :WritePrivateProfileString("config","EnableWebAccount","0",pszFullPath);
+
 	HKEY hRun;
 	LONG kResult = ::RegOpenKeyEx(	HKEY_CURRENT_USER ,
 									"Software\\Microsoft\\Windows\\CurrentVersion\\Run",
@@ -131,10 +134,6 @@ void CConfig::SaveConfig()
 	::RegCloseKey(hRun);
 
 
-
-
-
-
 	//保存首选的网卡
 	WritePrivateProfileString("config","netcard",m_csNetCard,pszFullPath);
 
@@ -162,6 +161,10 @@ void CConfig::SaveConfig()
 			str=user.user+"|"+str;
 		}
 	}
+
+	WritePrivateProfileString("config","WebUsername",str,m_csWebUsername);
+	WritePrivateProfileString("config","WebPassword",str,m_csWebPassword);
+
 	WritePrivateProfileString("config","username",str,pszFullPath);
 
 	WritePrivateProfileString("config","LastUser",m_csLastUser,pszFullPath);
@@ -189,7 +192,7 @@ void CConfig::LoadConfig()
 	m_bWebAuth=(retCode==1?TRUE:FALSE);
 
 	//读取是否进行网页注销,默认为是
-	retCode=GetPrivateProfileInt("config","WebLogout",1,pszFullPath);
+	retCode=GetPrivateProfileInt("config","WebLogout",0,pszFullPath);
 	m_bWebLogout=(retCode==1?TRUE:FALSE);
 
 	//读取是否开机自动运行,默认为否
@@ -203,6 +206,9 @@ void CConfig::LoadConfig()
 
 	retCode=GetPrivateProfileInt("config","ShowBubble",1,pszFullPath);
 	m_bShowBubble=(retCode==1?TRUE:FALSE);
+
+	retCode=GetPrivateProfileInt("config","EnableWebAccount",0,pszFullPath);
+	m_bEnableWebAccount=(retCode==1?TRUE:FALSE);
 
 
 	//读取所有账号密码参数
@@ -238,6 +244,11 @@ void CConfig::LoadConfig()
 	GetPrivateProfileString("config","WebLogoutUrl","http://125.88.59.131:10001/Logout.do?edubas=113.98.13.29",szTemp,MAX_STRING,pszFullPath);
 	m_csWebLogoutUrl=szTemp;
 
+	GetPrivateProfileString("config","WebUsername","",szTemp,MAX_STRING,pszFullPath);
+	m_csWebUsername=szTemp;
+
+	GetPrivateProfileString("config","WebPassword","",szTemp,MAX_STRING,pszFullPath);
+	m_csWebPassword=szTemp;
 
 }
 void CConfig::LoadDefaultConfig()

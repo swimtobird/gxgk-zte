@@ -63,6 +63,9 @@ void CSettingDlg::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CSettingDlg, CDialog)
 	//{{AFX_MSG_MAP(CSettingDlg)
+	ON_BN_CLICKED(IDC_CHK_WEB_AUTH, OnChkWebAuth)
+	ON_BN_CLICKED(IDC_CHK_WEB_LOGOUT, OnChkWebLogout)
+	ON_BN_CLICKED(IDC_CHK_ENABLE_WEBACCOUNT, OnChkEnableWebaccount)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -82,6 +85,7 @@ BOOL CSettingDlg::OnInitDialog()
 	CheckDlgButton(IDC_CHK_BUBBLE,Config.m_bShowBubble?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHK_WEB_AUTH,Config.m_bWebAuth?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHK_WEB_LOGOUT,Config.m_bWebLogout?BST_CHECKED:BST_UNCHECKED);
+	CheckDlgButton(IDC_CHK_ENABLE_WEBACCOUNT,Config.m_bEnableWebAccount?BST_CHECKED:BST_UNCHECKED);
 
 
 	char szTemp[MAX_STRING];
@@ -90,9 +94,15 @@ BOOL CSettingDlg::OnInitDialog()
 
 	GetDlgItem(IDC_WEB_AUTH_URL)->SetWindowText(Config.m_csWebAuthUrl);
 	GetDlgItem(IDC_WEB_LOGOUT_URL)->SetWindowText(Config.m_csWebLogoutUrl);
+	GetDlgItem(IDC_WEB_USERNAME)->SetWindowText(Config.m_csWebUsername);
+	GetDlgItem(IDC_WEB_PASSWORD)->SetWindowText(Config.m_csWebPassword);
 	
 	m_url.SetURL(STR_WebUrl);
 	GetDlgItem(IDC_VERSION)->SetWindowText(STR_AppName"       "STR_Version);
+
+	OnChkWebAuth();
+	OnChkWebLogout();
+	OnChkEnableWebaccount();
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
@@ -106,6 +116,7 @@ void CSettingDlg::OnOK()
 	Config.m_bAutorun = (bool)(IsDlgButtonChecked(IDC_CHK_AUTORUN));
 	Config.m_bShowBubble = (bool)(IsDlgButtonChecked(IDC_CHK_BUBBLE));
 	Config.m_bWebLogout = (bool)(IsDlgButtonChecked(IDC_CHK_WEB_LOGOUT));
+	Config.m_bEnableWebAccount = (bool)(IsDlgButtonChecked(IDC_CHK_ENABLE_WEBACCOUNT));
 
 
 	GetDlgItem(IDC_TIMEOUT)->GetWindowText(szTemp,MAX_STRING);
@@ -117,6 +128,47 @@ void CSettingDlg::OnOK()
 	GetDlgItem(IDC_WEB_LOGOUT_URL)->GetWindowText(szTemp,MAX_STRING);
 	Config.m_csWebLogoutUrl = szTemp;
 
+	GetDlgItem(IDC_WEB_USERNAME)->GetWindowText(szTemp,MAX_STRING);
+	Config.m_csWebUsername = szTemp;
+
+	GetDlgItem(IDC_WEB_PASSWORD)->GetWindowText(szTemp,MAX_STRING);
+	Config.m_csWebPassword = szTemp;
+
 	Config.SaveConfig();
 	CDialog::OnOK();
+}
+
+void CSettingDlg::OnChkWebAuth() 
+{
+	// TODO: Add your control notification handler code here
+	if(IsDlgButtonChecked(IDC_CHK_WEB_AUTH))
+	{
+		GetDlgItem(IDC_WEB_AUTH_URL)->EnableWindow(TRUE);
+	}else{
+		GetDlgItem(IDC_WEB_AUTH_URL)->EnableWindow(FALSE);
+	}
+}
+
+void CSettingDlg::OnChkWebLogout() 
+{
+	// TODO: Add your control notification handler code here
+	if(IsDlgButtonChecked(IDC_CHK_WEB_LOGOUT))
+	{
+		GetDlgItem(IDC_WEB_LOGOUT_URL)->EnableWindow(TRUE);
+	}else{
+		GetDlgItem(IDC_WEB_LOGOUT_URL)->EnableWindow(FALSE);
+	}
+}
+
+void CSettingDlg::OnChkEnableWebaccount() 
+{
+	// TODO: Add your control notification handler code here
+	if(IsDlgButtonChecked(IDC_CHK_ENABLE_WEBACCOUNT))
+	{
+		GetDlgItem(IDC_WEB_USERNAME)->EnableWindow(TRUE);
+		GetDlgItem(IDC_WEB_PASSWORD)->EnableWindow(TRUE);
+	}else{
+		GetDlgItem(IDC_WEB_USERNAME)->EnableWindow(FALSE);
+		GetDlgItem(IDC_WEB_PASSWORD)->EnableWindow(FALSE);
+	}
 }
