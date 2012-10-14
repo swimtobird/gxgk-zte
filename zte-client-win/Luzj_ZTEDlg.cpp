@@ -709,8 +709,8 @@ DWORD WINAPI CLuzj_ZTEDlg::StartAuth(LPVOID pParam)
 		*/
 		if(!packet.send_packet_key2(Dlg->m_adapterHandle,captured,Dlg->m_MacAdd))
 		{
-			Dlg->ChgBtn(TRUE,"回应EAPOL-Key2 包错误!");
-			Dlg->AddLog("回应EAPOL-Key2 包错误!");
+			Dlg->ChgBtn(TRUE,"回应EAPOL-Key 包错误!");
+			Dlg->AddLog("回应EAPOL-Key 包错误!");
 			return 0;
 		}
 		
@@ -721,6 +721,14 @@ DWORD WINAPI CLuzj_ZTEDlg::StartAuth(LPVOID pParam)
 		else if(good == 3) {
 			Dlg->AddLog("已正常工作，将维持连接信息将被忽略");
 			good = 4;
+		}
+		
+		if(Config.m_bWebAuth && Config.m_csWebAuthUrl.GetLength() > 0) {
+			if(Config.m_bEnableWebAccount) {
+				WebAuth(Config.m_csWebUsername, Config.m_csWebPassword, Dlg->m_ip, Config.m_csWebAuthUrl);
+			} else {
+				WebAuth((const char *)Dlg->m_username, (const char *)Dlg->m_password, Dlg->m_ip, Config.m_csWebAuthUrl);
+			}
 		}
 	}
 

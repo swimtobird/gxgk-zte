@@ -32,6 +32,8 @@
 #include "pcap.h"
 #pragma comment(lib, "wpcap.lib")
 
+#pragma warning (disable: 4800)
+
 #define CURL_STATICLIB
 
 #include "curl/curl.h"
