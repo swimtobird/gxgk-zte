@@ -1,7 +1,7 @@
 #define VER_Major    1
 #define VER_Minor    0
-#define VER_Release    86    
-#define VER_Build    350  
+#define VER_Release    130   
+#define VER_Build    452  
 #define VER_Version    MAKELONG(MAKEWORD(VER_Major, VER_Minor), VER_Release)
 
 #define _Stringizing(v)    #v
@@ -15,7 +15,7 @@
 
 
 
-#define MAX_STRING 260
+#define MAX_STRING 2048
 #define CONFIGNAME TEXT("zte.conf")
 //#define CONFIGNAME TEXT("ZWZZte.conf")
 

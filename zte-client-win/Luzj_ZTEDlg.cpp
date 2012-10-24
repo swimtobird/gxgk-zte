@@ -131,25 +131,20 @@ BOOL CLuzj_ZTEDlg::OnInitDialog()
 	CheckDlgButton(IDC_REMEMBER,Config.m_bRememberPWD?BST_CHECKED:BST_UNCHECKED);
 	//////////////////////////////////////////////////////////////////////////
 	//加载账号信息
-	userInfo user;
-	i=Config.m_UserInfo.GetCount();
-
-	for (k=0;k<i;k++)
-	{
-		Config.m_UserInfo.Lookup(k,user);
-		m_ccb_username.AddString(user.user);
+	CString user,pass;	
+	POSITION p = Config.m_UserInfo.GetStartPosition();	
+	while(p != NULL) {
+		Config.m_UserInfo.GetNextAssoc(p, user, pass);		
+		m_ccb_username.AddString(user);		
 	}
-	m_ccb_username.SetCurSel(0);
-	for (k=0;k<i;k++)
-	{
-		Config.m_UserInfo.Lookup(k,user);
-		if (user.user==Config.m_csLastUser)
-		{
-			m_ccb_username.SetCurSel(k);
-			GetDlgItem(IDC_PWD)->SetWindowText(user.pass);
-			break;
-		}
+	k = m_ccb_username.FindStringExact(-1, Config.m_csLastUser);
+	if(k < 0) k = 0;
+	if(!Config.m_UserInfo.IsEmpty()) {
+		m_ccb_username.SetCurSel(k);
+		m_ccb_username.GetWindowText(user);
+		GetDlgItem(IDC_PWD)->SetWindowText(Config.m_UserInfo[user]);		
 	}
+	
 
 	//////////////////////////////////////////////////////////////////////////
 
@@ -365,22 +360,8 @@ void CLuzj_ZTEDlg::OnStart()
 		Config.m_bRememberPWD=FALSE;
 	}
 
-	Config.m_csLastUser=strUser;
-	userInfo user;
-	int i=0,k=0;
-	i=Config.m_UserInfo.GetCount();
-	for (k=0;k<i;k++)
-	{
-		Config.m_UserInfo.Lookup(k,user);
-		if (user.user==strUser)
-		{
-			break;
-		}
-	}
-	user.user=strUser;
-	user.pass=strPass;
-	Config.m_UserInfo.SetAt(k,user);
-
+	Config.m_csLastUser=strUser;	
+	Config.m_UserInfo[strUser]=strPass;
 
 	Config.SaveConfig();
 	//////////////////////////////////////////////////////////////////////////
@@ -449,7 +430,7 @@ DWORD WINAPI CLuzj_ZTEDlg::StartAuth(LPVOID pParam)
 	}
 
 	if (pAdapterInfo->DhcpEnabled!=1)//适配器是否启用了动态主机配置协议（DHCP）
-	{		
+	{				
 		Dlg->ChgBtn(TRUE,"请先去 控制面板--管理--服务 里面，将DHCP服务启动!");
 		return 0;
 	}
@@ -786,15 +767,8 @@ void CLuzj_ZTEDlg::getUserInfo()
 	UpdateData();
 	m_usernameLen=m_user.GetLength();
 	m_passwordLen=m_pass.GetLength();
-	int i=0,j=0;
-	while(i<m_usernameLen)
-	{
-		m_username[i++]=m_user.GetAt(i);
-	}
-	while(j<m_passwordLen)
-	{
-		m_password[j++]=m_pass.GetAt(j);
-	}
+	strncpy((char*)m_username, m_user, sizeof(m_username));
+	strncpy((char*)m_password, m_pass, sizeof(m_password));
 }
 //========================getUserInfo======================================
 
@@ -866,20 +840,8 @@ void CLuzj_ZTEDlg::OnLogshow()
 void CLuzj_ZTEDlg::OnSelchangeUsername() 
 {
 	CString str;
-	m_ccb_username.GetLBText(m_ccb_username.GetCurSel(),str);
-
-	userInfo user;
-	int i=0,k=0;
-	i=Config.m_UserInfo.GetCount();
-	for (k=0;k<i;k++)
-	{
-		Config.m_UserInfo.Lookup(k,user);
-		if (user.user==str)
-		{
-			GetDlgItem(IDC_PWD)->SetWindowText(user.pass);
-			break;
-		}
-	}
+	m_ccb_username.GetLBText(m_ccb_username.GetCurSel(), str);	
+	GetDlgItem(IDC_PWD)->SetWindowText(Config.m_UserInfo[str]);	
 }
 
 void CLuzj_ZTEDlg::OnTest() 

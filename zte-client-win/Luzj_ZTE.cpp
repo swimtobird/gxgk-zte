@@ -33,6 +33,7 @@
 #include "Luzj_ZTE.h"
 #include "Luzj_ZTEDlg.h"
 
+#include "aes.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -82,6 +83,7 @@ BOOL CLuzj_ZTEApp::InitInstance()
 #else
 	Enable3dControlsStatic();	// Call this when linking to MFC statically
 #endif
+
 
 #ifndef _DEBUG
 	HANDLE g_mutex	=  CreateMutex(NULL,FALSE,"ZTE4GDST");
