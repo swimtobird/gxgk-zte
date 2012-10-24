@@ -12,13 +12,6 @@
 #include <afxtempl.h>
 #include "Define.h"
 
-struct userInfo 
-{
-//	int id;
-	CString user;
-	CString pass;
-};
-
 class CConfig  
 {
 public:
@@ -48,7 +41,7 @@ public:
 	CString m_csWebPassword;//网页认证密码
 
 
-	CMap<int,int,userInfo,userInfo>   m_UserInfo;	//存放所有的账号密码信息
+	CMapStringToString   m_UserInfo;	//存放所有的账号密码信息
 
 	CString m_csLastUser;	//上次所用的用户名
 

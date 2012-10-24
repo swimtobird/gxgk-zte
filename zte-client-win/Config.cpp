@@ -33,6 +33,7 @@
 #include "stdafx.h"
 #include "Luzj_ZTE.h"
 #include "Config.h"
+#include "aes.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -143,31 +144,19 @@ void CConfig::SaveConfig()
 	//保存网页注销地址
 	WritePrivateProfileString("config","WebLogoutUrl",m_csWebLogoutUrl,pszFullPath);
 	
-	//读取所有账号密码参数
-	CString str="";
-	userInfo user;
-	int i=0,k=0;
-	i=Config.m_UserInfo.GetCount();
-	for (k=0;k<i;k++)
-	{
-		Config.m_UserInfo.Lookup(k,user);
-		WritePrivateProfileString("config",user.user,user.pass,pszFullPath);
-		if (k==0)
-		{
-			str=user.user;
-		}
-		else
-		{
-			str=user.user+"|"+str;
-		}
-	}
-
-	WritePrivateProfileString("config","username",str,pszFullPath);
+	//读取所有账号密码参数	
+	CString user,pass;	
+	POSITION p = Config.m_UserInfo.GetStartPosition();
+	while(p != NULL) {		
+		Config.m_UserInfo.GetNextAssoc(p, user, pass);		
+		if(user.GetLength() > 0)
+			WritePrivateProfileString("users", user, aes_encrypt((LPCTSTR)pass), pszFullPath);		
+	}	
 
 	WritePrivateProfileString("config","LastUser",m_csLastUser,pszFullPath);
 
 	WritePrivateProfileString("config","WebUsername",m_csWebUsername,pszFullPath);
-	WritePrivateProfileString("config","WebPassword",m_csWebPassword,pszFullPath);
+	WritePrivateProfileString("config","WebPassword",aes_encrypt((LPCTSTR)m_csWebPassword),pszFullPath);
 
 }
 void CConfig::LoadConfig()
@@ -210,25 +199,22 @@ void CConfig::LoadConfig()
 
 
 	//读取所有账号密码参数
-	char szTemp[MAX_STRING],szPass[MAX_STRING];
-	GetPrivateProfileString("config","LastUser","",szTemp,MAX_STRING,pszFullPath);
-	m_csLastUser=szTemp;
-	GetPrivateProfileString("config","username","",szTemp,MAX_STRING,pszFullPath);
-	char *seps= "|";
-	char *token;
-	int i=0,k=0;
-	userInfo user;
-	token = strtok(szTemp, seps);
-	while( token != NULL )
-	{
-		GetPrivateProfileString("config",token,"",szPass,MAX_STRING,pszFullPath);
-		user.user=token;
-		user.pass=szPass;
-		m_UserInfo.SetAt(i,user);
-		token = strtok( NULL, seps );	
-		i++;
+	char szTemp[MAX_STRING];
+	Config.m_UserInfo.RemoveAll();
+	GetPrivateProfileString("users",NULL, NULL, szTemp, MAX_STRING, pszFullPath);
+	char user[MAX_STRING], pass[MAX_STRING];	
+	char *p = szTemp;
+	if(*p == '\0') p++;
+	while(*p) {
+		strncpy(user,p, MAX_STRING);
+		GetPrivateProfileString("users", user, "", pass, MAX_STRING,pszFullPath);
+		Config.m_UserInfo[user] = aes_decrypt(pass);
+		while(*p++);
 	}
 
+	//读取上次所选网卡的名字
+	GetPrivateProfileString("config","LastUser","",szTemp,MAX_STRING,pszFullPath);
+	m_csLastUser=szTemp;
 
 	//读取上次所选网卡的名字
 	GetPrivateProfileString("config","netcard","",szTemp,MAX_STRING,pszFullPath);
@@ -246,7 +232,7 @@ void CConfig::LoadConfig()
 	m_csWebUsername=szTemp;
 
 	GetPrivateProfileString("config","WebPassword","",szTemp,MAX_STRING,pszFullPath);
-	m_csWebPassword=szTemp;
+	m_csWebPassword=aes_decrypt(szTemp);
 
 }
 void CConfig::LoadDefaultConfig()
