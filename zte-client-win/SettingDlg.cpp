@@ -191,7 +191,7 @@ void CSettingDlg::OnChkReauthTime()
 	{
 		GetDlgItem(IDC_TXT_REAUTH_TIME)->EnableWindow(TRUE);		
 	}else{
-		GetDlgItem(IDC_TXT_REAUTH_TIME)->EnableWindow(TRUE);		
+		GetDlgItem(IDC_TXT_REAUTH_TIME)->EnableWindow(FALSE);		
 	}	
 }
 
