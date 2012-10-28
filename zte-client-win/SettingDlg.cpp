@@ -66,6 +66,8 @@ BEGIN_MESSAGE_MAP(CSettingDlg, CDialog)
 	ON_BN_CLICKED(IDC_CHK_WEB_AUTH, OnChkWebAuth)
 	ON_BN_CLICKED(IDC_CHK_WEB_LOGOUT, OnChkWebLogout)
 	ON_BN_CLICKED(IDC_CHK_ENABLE_WEBACCOUNT, OnChkEnableWebaccount)
+	ON_BN_CLICKED(IDC_CHK_REAUTH_TIME, OnChkReauthTime)
+	ON_EN_KILLFOCUS(IDC_TXT_REAUTH_TIME, OnKillfocusTxtReauthTime)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -86,6 +88,7 @@ BOOL CSettingDlg::OnInitDialog()
 	CheckDlgButton(IDC_CHK_WEB_AUTH,Config.m_bWebAuth?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHK_WEB_LOGOUT,Config.m_bWebLogout?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHK_ENABLE_WEBACCOUNT,Config.m_bEnableWebAccount?BST_CHECKED:BST_UNCHECKED);
+	CheckDlgButton(IDC_CHK_REAUTH_TIME,Config.m_bReauth?BST_CHECKED:BST_UNCHECKED);
 
 
 	char szTemp[MAX_STRING];
@@ -96,6 +99,9 @@ BOOL CSettingDlg::OnInitDialog()
 	GetDlgItem(IDC_WEB_LOGOUT_URL)->SetWindowText(Config.m_csWebLogoutUrl);
 	GetDlgItem(IDC_WEB_USERNAME)->SetWindowText(Config.m_csWebUsername);
 	GetDlgItem(IDC_WEB_PASSWORD)->SetWindowText(Config.m_csWebPassword);
+	GetDlgItem(IDC_TXT_REAUTH_TIME)->SetWindowText(Config.m_csReauthTime);
+			
+
 	
 	m_url.SetURL(STR_WebUrl);
 	GetDlgItem(IDC_VERSION)->SetWindowText(STR_AppName"       "STR_Version);
@@ -103,6 +109,7 @@ BOOL CSettingDlg::OnInitDialog()
 	OnChkWebAuth();
 	OnChkWebLogout();
 	OnChkEnableWebaccount();
+	OnChkReauthTime();
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
@@ -117,6 +124,7 @@ void CSettingDlg::OnOK()
 	Config.m_bShowBubble = (bool)(IsDlgButtonChecked(IDC_CHK_BUBBLE));
 	Config.m_bWebLogout = (bool)(IsDlgButtonChecked(IDC_CHK_WEB_LOGOUT));
 	Config.m_bEnableWebAccount = (bool)(IsDlgButtonChecked(IDC_CHK_ENABLE_WEBACCOUNT));
+	Config.m_bReauth = (bool)(IsDlgButtonChecked(IDC_CHK_REAUTH_TIME));
 
 
 	GetDlgItem(IDC_TIMEOUT)->GetWindowText(szTemp,MAX_STRING);
@@ -133,6 +141,9 @@ void CSettingDlg::OnOK()
 
 	GetDlgItem(IDC_WEB_PASSWORD)->GetWindowText(szTemp,MAX_STRING);
 	Config.m_csWebPassword = szTemp;
+
+	GetDlgItem(IDC_TXT_REAUTH_TIME)->GetWindowText(szTemp,MAX_STRING);
+	Config.m_csReauthTime = szTemp;
 
 	Config.SaveConfig();
 	CDialog::OnOK();
@@ -170,5 +181,28 @@ void CSettingDlg::OnChkEnableWebaccount()
 	}else{
 		GetDlgItem(IDC_WEB_USERNAME)->EnableWindow(FALSE);
 		GetDlgItem(IDC_WEB_PASSWORD)->EnableWindow(FALSE);
+	}
+}
+
+void CSettingDlg::OnChkReauthTime() 
+{
+	// TODO: Add your control notification handler code here
+	if(IsDlgButtonChecked(IDC_CHK_REAUTH_TIME))
+	{
+		GetDlgItem(IDC_TXT_REAUTH_TIME)->EnableWindow(TRUE);		
+	}else{
+		GetDlgItem(IDC_TXT_REAUTH_TIME)->EnableWindow(TRUE);		
+	}	
+}
+
+void CSettingDlg::OnKillfocusTxtReauthTime() 
+{
+	// TODO: Add your control notification handler code here
+	char szTemp[MAX_STRING];
+	int hour,min,second;
+	CWnd *wndReauthTime = GetDlgItem(IDC_TXT_REAUTH_TIME);
+	wndReauthTime->GetWindowText(szTemp,MAX_STRING);
+	if(sscanf(szTemp, "%d:%d:%d", &hour, &min, &second) != 3) {
+		AfxMessageBox("格式错误！时间修改无效！样例：23:30:00", MB_SYSTEMMODAL);
 	}
 }

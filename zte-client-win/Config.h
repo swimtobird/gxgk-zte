@@ -40,6 +40,9 @@ public:
 	CString m_csWebUsername;//网页认证用户名
 	CString m_csWebPassword;//网页认证密码
 
+	bool m_bReauth;//重新认证时间
+	CString m_csReauthTime;
+
 
 	CMapStringToString   m_UserInfo;	//存放所有的账号密码信息
 
@@ -47,8 +50,7 @@ public:
 
 	CString	m_csNetCard;	//上次所选择的网卡名字
 
-
-
+	
 /*==================以下配置参数尚未被启用================
 	bool m_bDHCP;			//是否启用DHCP
 

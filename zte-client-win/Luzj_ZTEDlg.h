@@ -45,6 +45,7 @@ public:
 	int				m_passwordLen;
 
 	char	m_ip[16];
+	char	m_adaptername[256];
 
 
 	void	getUserInfo();
@@ -52,6 +53,10 @@ public:
 	void	SetBubble(char * title,char * content,int timeout=1000);
 	void	ChgBtn(bool bStart,char * szMsg=NULL);
 
+	static DWORD WINAPI GetMacIP(const char *adaptername, char ip[16], unsigned char mac[6]);
+	static DWORD WINAPI IpconfigRenew();
+	static DWORD WINAPI ZteAuth(const char *username, const char *password, 
+		const char *adaptername);
 	static DWORD WINAPI StartAuth(LPVOID pParam);
 // Dialog Data
 	//{{AFX_DATA(CLuzj_ZTEDlg)
