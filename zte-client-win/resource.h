@@ -38,6 +38,8 @@
 #define IDC_CHK_WEB_LOGOUT              1027
 #define IDC_WEB_USERNAME                1028
 #define IDC_WEB_PASSWORD                1029
+#define IDC_CHK_REAUTH_TIME             1030
+#define IDC_TXT_REAUTH_TIME             1031
 
 // Next default values for new objects
 // 
@@ -45,7 +47,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        142
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1027
+#define _APS_NEXT_CONTROL_VALUE         1033
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

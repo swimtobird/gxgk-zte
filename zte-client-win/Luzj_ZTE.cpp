@@ -84,7 +84,6 @@ BOOL CLuzj_ZTEApp::InitInstance()
 	Enable3dControlsStatic();	// Call this when linking to MFC statically
 #endif
 
-
 #ifndef _DEBUG
 	HANDLE g_mutex	=  CreateMutex(NULL,FALSE,"ZTE4GDST");
 	HWND findHwnd;

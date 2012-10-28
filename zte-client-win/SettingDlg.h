@@ -42,6 +42,8 @@ protected:
 	afx_msg void OnChkWebAuth();
 	afx_msg void OnChkWebLogout();
 	afx_msg void OnChkEnableWebaccount();
+	afx_msg void OnChkReauthTime();
+	afx_msg void OnKillfocusTxtReauthTime();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

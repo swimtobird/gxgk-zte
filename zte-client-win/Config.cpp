@@ -80,27 +80,25 @@ void CConfig::SaveConfig()
 	WritePrivateProfileString("config","Timeout",szTemp,pszFullPath);
 
 	//保存是否自动保存密码
-	m_bRememberPWD==TRUE?WritePrivateProfileString("config","RememberPWD","1",pszFullPath)
-						:WritePrivateProfileString("config","RememberPWD","0",pszFullPath);
+	WritePrivateProfileString("config","RememberPWD",m_bRememberPWD==TRUE?"1":"0",pszFullPath);
+
 	//保存是否网页认证
-	m_bWebAuth==TRUE?WritePrivateProfileString("config","WebAuth","1",pszFullPath)
-						:WritePrivateProfileString("config","WebAuth","0",pszFullPath);
+	WritePrivateProfileString("config","WebAuth",m_bWebAuth==TRUE?"1":"0",pszFullPath);
+	
 	//保存是否网页注销
-	m_bWebLogout==TRUE?WritePrivateProfileString("config","WebLogout","1",pszFullPath)
-						:WritePrivateProfileString("config","WebLogout","0",pszFullPath);
+	WritePrivateProfileString("config","WebLogout",m_bWebLogout==TRUE?"1":"0",pszFullPath);
 	
 	//保存是否开机自动运行
-	m_bAutorun==TRUE?WritePrivateProfileString("config","Autorun","1",pszFullPath)
-					:WritePrivateProfileString("config","Autorun","0",pszFullPath);
-	//保存是否自动登录
-	m_bAutologon==TRUE?WritePrivateProfileString("config","Autologon","1",pszFullPath)
-					  :WritePrivateProfileString("config","Autologon","0",pszFullPath);
-
-	m_bShowBubble==TRUE?WritePrivateProfileString("config","ShowBubble","1",pszFullPath)
-					  :WritePrivateProfileString("config","ShowBubble","0",pszFullPath);
-
-	m_bEnableWebAccount ==TRUE?WritePrivateProfileString("config","EnableWebAccount","1",pszFullPath)
-					  :WritePrivateProfileString("config","EnableWebAccount","0",pszFullPath);
+	WritePrivateProfileString("config","Autorun",m_bAutorun==TRUE?"1":"0",pszFullPath);
+	
+	//保存是否自动登录	
+	WritePrivateProfileString("config","Autologon",m_bAutologon==TRUE?"1":"0",pszFullPath);
+	//气泡提示
+	WritePrivateProfileString("config","ShowBubble",m_bShowBubble==TRUE?"1":"0",pszFullPath);
+	//启用网页认证帐号
+	WritePrivateProfileString("config","EnableWebAccount",m_bEnableWebAccount==TRUE?"1":"0",pszFullPath);
+	//启用重新认证时间
+	WritePrivateProfileString("config","Reauth",m_bReauth ==TRUE?"1":"0",pszFullPath);
 
 	HKEY hRun;
 	LONG kResult = ::RegOpenKeyEx(	HKEY_CURRENT_USER ,
@@ -134,6 +132,9 @@ void CConfig::SaveConfig()
 	}
 	::RegCloseKey(hRun);
 
+
+	//重新认证时间
+	WritePrivateProfileString("config","ReauthTime",m_csReauthTime,pszFullPath);
 
 	//保存首选的网卡
 	WritePrivateProfileString("config","netcard",m_csNetCard,pszFullPath);
@@ -170,6 +171,7 @@ void CConfig::LoadConfig()
 
 	int retCode;
 	m_iTimeout=GetPrivateProfileInt("config","Timeout",180,pszFullPath);
+
 	//读取是否自动保存密码,默认为是
 	retCode=GetPrivateProfileInt("config","RememberPWD",1,pszFullPath);
 	m_bRememberPWD=(retCode==1?TRUE:FALSE);
@@ -196,6 +198,10 @@ void CConfig::LoadConfig()
 
 	retCode=GetPrivateProfileInt("config","EnableWebAccount",0,pszFullPath);
 	m_bEnableWebAccount=(retCode==1?TRUE:FALSE);
+	
+	retCode=GetPrivateProfileInt("config","Reauth",0,pszFullPath);
+	m_bReauth=(retCode==1?TRUE:FALSE);
+
 
 
 	//读取所有账号密码参数
@@ -233,6 +239,9 @@ void CConfig::LoadConfig()
 
 	GetPrivateProfileString("config","WebPassword","",szTemp,MAX_STRING,pszFullPath);
 	m_csWebPassword=aes_decrypt(szTemp);
+
+	GetPrivateProfileString("config","ReauthTime","",szTemp,MAX_STRING,pszFullPath);
+	m_csReauthTime=szTemp;
 
 }
 void CConfig::LoadDefaultConfig()

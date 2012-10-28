@@ -345,3 +345,4 @@ int CPacket::send_packet_key2(pcap_t * adapterHandle,const u_char* captured,u_ch
 	return 1;
 }
 //======================packet_key2======================================
+

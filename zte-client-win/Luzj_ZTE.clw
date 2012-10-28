@@ -13,9 +13,9 @@ Class2=CLuzj_ZTEDlg
 Class3=CSettingDlg
 
 ResourceCount=3
-Resource1=IDD_LUZJ_ZTE_DIALOG
+Resource1=IDD_SETTING
 Resource2=IDR_MAINFRAME
-Resource3=IDD_SETTING
+Resource3=IDD_LUZJ_ZTE_DIALOG
 
 [CLS:CLuzj_ZTEApp]
 Type=0
@@ -55,7 +55,7 @@ Control15=IDC_REMEMBER,button,1342242819
 [DLG:IDD_SETTING]
 Type=1
 Class=CSettingDlg
-ControlCount=23
+ControlCount=26
 Control1=IDOK,button,1342242817
 Control2=IDCANCEL,button,1342242816
 Control3=IDC_CHK_AUTOLOGON,button,1342242819
@@ -79,6 +79,9 @@ Control20=IDC_STATIC,static,1342308354
 Control21=IDC_STATIC,static,1342308354
 Control22=IDC_CHK_ENABLE_WEBACCOUNT,button,1342242819
 Control23=IDC_STATIC,button,1342177287
+Control24=IDC_CHK_REAUTH_TIME,button,1342242819
+Control25=IDC_TXT_REAUTH_TIME,edit,1350631553
+Control26=IDC_STATIC,static,1342308353
 
 [CLS:CSettingDlg]
 Type=0
@@ -86,6 +89,6 @@ HeaderFile=SettingDlg.h
 ImplementationFile=SettingDlg.cpp
 BaseClass=CDialog
 Filter=D
-LastObject=IDC_WEBURL
+LastObject=IDC_TP_REAUTH_TIME
 VirtualFilter=dWC
 
