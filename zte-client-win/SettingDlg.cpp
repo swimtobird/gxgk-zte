@@ -218,6 +218,8 @@ void CSettingDlg::OnBtnAutoUpdate()
 	CWnd *parent = this->GetParent();
 	if(parent != NULL) {
 		CLuzj_ZTEDlg *Dlg = (CLuzj_ZTEDlg *)parent;
-		Dlg->CheckUpdate();
+		if(Dlg->CheckUpdate() == 2) {
+			AfxMessageBox("这已经是最新版本的了！");
+		}
 	}
 }

@@ -85,17 +85,19 @@ BEGIN_MESSAGE_MAP(CLuzj_ZTEDlg, CDialog)
 END_MESSAGE_MAP()
 
 
-BOOL CLuzj_ZTEDlg::CheckUpdate()
+int CLuzj_ZTEDlg::CheckUpdate()
 {
-	if(AutoUpdate() == 0) {
+	int ret = AutoUpdate();
+	if(ret == 0) {
 		if(this->m_bAuth) {
 			this->OnLogoff();
 		}
 		this->PostMessage(WM_QUIT);
 	//	Sleep(1000);
 		TerminateProcess(GetCurrentProcess(), 0);
-	}
-	return TRUE;
+	} else if(ret == 4) { return 2; }
+
+	return 1;
 }
 
 BOOL CLuzj_ZTEDlg::OnInitDialog()

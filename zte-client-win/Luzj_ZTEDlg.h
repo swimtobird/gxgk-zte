@@ -60,7 +60,7 @@ public:
 	static DWORD WINAPI eap_thread(void *para);
 	DWORD WINAPI GetMacIP(const char *adaptername, char ip[16], unsigned char mac[6]);
 	DWORD WINAPI IpconfigRenew();
-	BOOL CheckUpdate();
+	int CheckUpdate();
 	
 // Dialog Data
 	//{{AFX_DATA(CLuzj_ZTEDlg)

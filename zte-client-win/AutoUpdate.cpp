@@ -84,7 +84,7 @@ int AutoUpdate()
 		Sleep(1000);
 		
 		return 0;
-	}
+	} 
 	//UpdateFile(GOOGLE_CODE_URL_ZTE, GetFileModifyTime());
 	return 4;
 }
