@@ -582,11 +582,13 @@ void CLuzj_ZTEDlg::get_packet(u_char *args, const struct pcap_pkthdr *pcaket_hea
 		} else if(packet[18] == 0x03) {//successful
 			SetProcessWorkingSetSize(GetCurrentProcess(),-1,-1);
 			Dlg->UpdateStatus(TRUE);
+			Dlg->IpconfigRenew();
 			if (Dlg->GetMacIP(Config.m_csNetCard, Dlg->m_ip, Dlg->m_MacAdd) != 0)	{
 				Dlg->Log("GetMacIP:no IP address.");		
 			} else {
 				Dlg->Log("IP:%s", Dlg->m_ip);
 			}
+			
 			if(Config.m_bWebAuth && Config.m_csWebAuthUrl.GetLength() > 0){
 				char *msg; int i;
 				for(i = 0; i < 3; i++) {

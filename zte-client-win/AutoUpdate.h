@@ -13,6 +13,5 @@ int AutoUpdate();
 FileInfo *GetFileModifyTime();
 FileInfo *GetHttpModifyTime(const char *url);
 int DownLoadFile(const char *savename, const char *url);
-int ReplaceCurrentFile(const char *szTempName);
 
 #endif
