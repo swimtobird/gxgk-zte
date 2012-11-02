@@ -89,12 +89,6 @@ int AutoUpdate()
 	return 4;
 }
 
-int ReplaceCurrentFile(const char *szTempName)
-{
-		
-	return 0;
-}
-
 int DownLoadFile(const char *savename, const char *url)
 {
 	FILE *file = NULL;
