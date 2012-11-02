@@ -24,6 +24,7 @@ class CLuzj_ZTEApp : public CWinApp
 public:
 	CLuzj_ZTEApp();
 
+	BOOL CheckCommandLine();
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CLuzj_ZTEApp)

@@ -99,6 +99,8 @@ void CConfig::SaveConfig()
 	WritePrivateProfileString("config","EnableWebAccount",m_bEnableWebAccount==TRUE?"1":"0",pszFullPath);
 	//启用重新认证时间
 	WritePrivateProfileString("config","Reauth",m_bReauth ==TRUE?"1":"0",pszFullPath);
+	//启用自动更新
+	WritePrivateProfileString("config","AutoUpdate",m_bAutoUpdate==TRUE?"1":"0",pszFullPath);
 
 	HKEY hRun;
 	LONG kResult = ::RegOpenKeyEx(	HKEY_CURRENT_USER ,
@@ -201,6 +203,9 @@ void CConfig::LoadConfig()
 	
 	retCode=GetPrivateProfileInt("config","Reauth",0,pszFullPath);
 	m_bReauth=(retCode==1?TRUE:FALSE);
+
+	retCode=GetPrivateProfileInt("config","AutoUpdate",0,pszFullPath);
+	m_bAutoUpdate=(retCode==1?TRUE:FALSE);
 
 
 

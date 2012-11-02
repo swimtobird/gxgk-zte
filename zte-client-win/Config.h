@@ -43,6 +43,8 @@ public:
 	bool m_bReauth;//重新认证时间
 	CString m_csReauthTime;
 
+	bool m_bAutoUpdate;
+
 
 	CMapStringToString   m_UserInfo;	//存放所有的账号密码信息
 
