@@ -30,7 +30,9 @@
 
 #include "stdafx.h"
 #include "Luzj_ZTE.h"
+#include "Luzj_ZTEDlg.h"
 #include "SettingDlg.h"
+#include "AutoUpdate.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -68,6 +70,7 @@ BEGIN_MESSAGE_MAP(CSettingDlg, CDialog)
 	ON_BN_CLICKED(IDC_CHK_ENABLE_WEBACCOUNT, OnChkEnableWebaccount)
 	ON_BN_CLICKED(IDC_CHK_REAUTH_TIME, OnChkReauthTime)
 	ON_EN_KILLFOCUS(IDC_TXT_REAUTH_TIME, OnKillfocusTxtReauthTime)
+	ON_BN_CLICKED(IDC_BTN_AUTO_UPDATE, OnBtnAutoUpdate)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -89,6 +92,7 @@ BOOL CSettingDlg::OnInitDialog()
 	CheckDlgButton(IDC_CHK_WEB_LOGOUT,Config.m_bWebLogout?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHK_ENABLE_WEBACCOUNT,Config.m_bEnableWebAccount?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHK_REAUTH_TIME,Config.m_bReauth?BST_CHECKED:BST_UNCHECKED);
+	CheckDlgButton(IDC_CHK_AUTO_UPDATE,Config.m_bAutoUpdate?BST_CHECKED:BST_UNCHECKED);
 
 
 	char szTemp[MAX_STRING];
@@ -125,6 +129,7 @@ void CSettingDlg::OnOK()
 	Config.m_bWebLogout = (bool)(IsDlgButtonChecked(IDC_CHK_WEB_LOGOUT));
 	Config.m_bEnableWebAccount = (bool)(IsDlgButtonChecked(IDC_CHK_ENABLE_WEBACCOUNT));
 	Config.m_bReauth = (bool)(IsDlgButtonChecked(IDC_CHK_REAUTH_TIME));
+	Config.m_bAutoUpdate = (bool)(IsDlgButtonChecked(IDC_CHK_AUTO_UPDATE));
 
 
 	GetDlgItem(IDC_TIMEOUT)->GetWindowText(szTemp,MAX_STRING);
@@ -204,5 +209,15 @@ void CSettingDlg::OnKillfocusTxtReauthTime()
 	wndReauthTime->GetWindowText(szTemp,MAX_STRING);
 	if(sscanf(szTemp, "%d:%d:%d", &hour, &min, &second) != 3) {
 		AfxMessageBox("格式错误！时间修改无效！样例：23:30:00", MB_SYSTEMMODAL);
+	}
+}
+
+void CSettingDlg::OnBtnAutoUpdate() 
+{
+	// TODO: Add your control notification handler code here
+	CWnd *parent = this->GetParent();
+	if(parent != NULL) {
+		CLuzj_ZTEDlg *Dlg = (CLuzj_ZTEDlg *)parent;
+		Dlg->CheckUpdate();
 	}
 }

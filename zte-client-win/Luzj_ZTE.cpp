@@ -34,6 +34,7 @@
 #include "Luzj_ZTEDlg.h"
 
 #include "aes.h"
+#include "AutoUpdate.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -69,6 +70,48 @@ CLuzj_ZTEApp theApp;
 /////////////////////////////////////////////////////////////////////////////
 // CLuzj_ZTEApp initialization
 
+BOOL CLuzj_ZTEApp::CheckCommandLine()
+{
+	extern int __argc;
+	extern char**  __argv;
+
+	int i;
+
+	if(__argc == 3) {
+		if(strcmp(__argv[1], "-update") == 0) {		
+			for(i = 0; i < 3; i++) {
+				//try to cover old version file
+				if(CopyFile(__argv[0], __argv[2], FALSE)) break;
+				Sleep(3000);
+			}
+			
+			if(i >= 3) {
+				AfxMessageBox("更新文件失败，请稍候重新尝试！");
+				return FALSE;
+			}
+
+			char parameters[MAX_PATH] = "-updated \"";
+			strcat(parameters, __argv[0]);
+
+			SHELLEXECUTEINFO ShExecInfo = {0};	
+			ShExecInfo.cbSize	= sizeof(SHELLEXECUTEINFO);
+			ShExecInfo.fMask		= SEE_MASK_NOCLOSEPROCESS;
+			ShExecInfo.lpFile		= __argv[2];	
+			ShExecInfo.lpParameters = _T(parameters);
+			ShExecInfo.nShow	= SW_SHOW;
+			ShellExecuteEx(&ShExecInfo);
+
+			return FALSE;
+		
+		} else if(strcmp(__argv[1], "-updated") == 0) {
+			DeleteFile(__argv[2]);
+			AfxMessageBox("更新完毕!");
+		}
+	}	
+	return TRUE;
+}
+
+
 BOOL CLuzj_ZTEApp::InitInstance()
 {	
 	AfxEnableControlContainer();
@@ -82,7 +125,9 @@ BOOL CLuzj_ZTEApp::InitInstance()
 	Enable3dControls();			// Call this when using MFC in a shared DLL
 #else
 	Enable3dControlsStatic();	// Call this when linking to MFC statically
-#endif
+#endif	
+
+	if(!CheckCommandLine()) return FALSE;
 
 #ifndef _DEBUG
 	HANDLE g_mutex	=  CreateMutex(NULL,FALSE,"ZTE4GDST");

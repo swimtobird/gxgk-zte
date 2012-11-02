@@ -47,25 +47,26 @@ public:
 	char	m_ip[16];
 	char	m_adaptername[256];
 
+	CEdit	*editLog;
 
-	void	getUserInfo();
-	void	AddLog(CString addStr);
-	void	SetBubble(char * title,char * content,int timeout=1000);
-	void	ChgBtn(bool bStart,char * szMsg=NULL);
 
-	static DWORD WINAPI GetMacIP(const char *adaptername, char ip[16], unsigned char mac[6]);
-	static DWORD WINAPI IpconfigRenew();
-	static DWORD WINAPI ZteAuth(const char *username, const char *password, 
-		const char *adaptername);
-	static DWORD WINAPI StartAuth(LPVOID pParam);
+	void	SetBubble(char * title,char * content,int timeout=1000);	
+	void	Log (const char *fmt, ...);
+	char*	DescriptionToName(const char *description);
+	char*	HttpAuth(BOOL bForce);
+	void	UpdateStatus(BOOL bOnline);
+
+	static void	get_packet(u_char *args, const struct pcap_pkthdr *pcaket_header, const u_char *packet);
+	static DWORD WINAPI eap_thread(void *para);
+	DWORD WINAPI GetMacIP(const char *adaptername, char ip[16], unsigned char mac[6]);
+	DWORD WINAPI IpconfigRenew();
+	BOOL CheckUpdate();
+	
 // Dialog Data
 	//{{AFX_DATA(CLuzj_ZTEDlg)
 	enum { IDD = IDD_LUZJ_ZTE_DIALOG };
-	CComboBox	m_ccb_username;
-	CListCtrl	m_lcLog;	
+	CComboBox	m_ccb_username;		
 	CComboBox	m_ccbNetCard;
-	CString		m_user;
-	CString		m_pass;
 	//}}AFX_DATA
 
 	// ClassWizard generated virtual function overrides
@@ -86,7 +87,6 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg void OnStart();
 	afx_msg void OnLogoff();
-	afx_msg void OnTest();
 	afx_msg void OnExit();
 	afx_msg void OnTrayShow();
 	afx_msg LONG OnTrayNotification(WPARAM wparam, LPARAM lparam);

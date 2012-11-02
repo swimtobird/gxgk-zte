@@ -34,6 +34,7 @@ public:
 	int send_packet_key1(pcap_t * adapterHandle,const u_char* captured,u_char* MacAdd);		//连接维持包1
 
 	int send_packet_key2(pcap_t * adapterHandle,const u_char* captured,u_char* MacAdd);		//连接维持包2
+
 };
 
 #endif // !defined(AFX_PACKET_H__AE293802_9E7F_4666_8323_49ECE7F9A8D0__INCLUDED_)

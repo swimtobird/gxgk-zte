@@ -33,6 +33,7 @@
 #include "stdafx.h"
 #include "Luzj_ZTE.h"
 #include "Luzj_ZTEDlg.h"
+#include "AutoUpdate.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -47,8 +48,7 @@ CLuzj_ZTEDlg::CLuzj_ZTEDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CLuzj_ZTEDlg::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CLuzj_ZTEDlg)
-	m_pass = _T("");
-	m_user = _T("");
+
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -62,9 +62,6 @@ void CLuzj_ZTEDlg::DoDataExchange(CDataExchange* pDX)
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CLuzj_ZTEDlg)
 	DDX_Control(pDX, IDC_USERNAME, m_ccb_username);
-	DDX_CBString(pDX, IDC_USERNAME, m_user);
-	DDX_Text(pDX, IDC_PWD, m_pass);
-	DDX_Control(pDX, IDC_LIST_LOG, m_lcLog);
 	DDX_Control(pDX, IDC_NETCARD, m_ccbNetCard);
 	//}}AFX_DATA_MAP
 }
@@ -75,8 +72,7 @@ BEGIN_MESSAGE_MAP(CLuzj_ZTEDlg, CDialog)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_START, OnStart)
-	ON_BN_CLICKED(IDC_LOGOFF, OnLogoff)
-	ON_BN_CLICKED(IDC_TEST, OnTest)
+	ON_BN_CLICKED(IDC_LOGOFF, OnLogoff)	
 	ON_BN_CLICKED(IDC_EXIT, OnExit)
 	ON_BN_CLICKED(MENU_SHOW, OnTrayShow)
 	ON_BN_CLICKED(MENU_EXIT, OnExit)
@@ -89,6 +85,19 @@ BEGIN_MESSAGE_MAP(CLuzj_ZTEDlg, CDialog)
 END_MESSAGE_MAP()
 
 
+BOOL CLuzj_ZTEDlg::CheckUpdate()
+{
+	if(AutoUpdate() == 0) {
+		if(this->m_bAuth) {
+			this->OnLogoff();
+		}
+		this->PostMessage(WM_QUIT);
+	//	Sleep(1000);
+		TerminateProcess(GetCurrentProcess(), 0);
+	}
+	return TRUE;
+}
+
 BOOL CLuzj_ZTEDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
@@ -97,16 +106,14 @@ BOOL CLuzj_ZTEDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 	
 	SetWindowText(STR_AppName);
+	m_bAuth = FALSE;
+
+	editLog = (CEdit*)GetDlgItem(IDC_EDIT_LOG);
 
 	//创建托盘图标
 	m_tray.Create(this, WM_USER_TRAY_NOTIFICATION,STR_AppName, m_hIcon, 0);
 
 	//修改列表控件
-	m_lcLog.SetExtendedStyle(LVS_EX_FULLROWSELECT|LVS_EX_FLATSB|LVS_EX_GRIDLINES );
-	m_lcLog.InsertColumn(1,"时间",LVCFMT_CENTER,60);
-	m_lcLog.InsertColumn(2,"事件",LVCFMT_CENTER,280);
-
-
 	GetWindowRect(&m_rc);
 	m_rc.top=m_rc.bottom-5;    //设置状态栏的矩形区域
 	m_StatusBar.Create(WS_CHILD |WS_VISIBLE|CBRS_BOTTOM,m_rc,this,20000);  
@@ -127,6 +134,7 @@ BOOL CLuzj_ZTEDlg::OnInitDialog()
 
 	//读取配置到文件配置对象中去
 	Config.LoadConfig();
+	//if(Config.m_bAutoUpdate) CheckUpdate();
 
 	CheckDlgButton(IDC_REMEMBER,Config.m_bRememberPWD?BST_CHECKED:BST_UNCHECKED);
 	//////////////////////////////////////////////////////////////////////////
@@ -160,30 +168,28 @@ BOOL CLuzj_ZTEDlg::OnInitDialog()
 	}
 
 	pcap_if_t* adapter;//临时存放适配器
-    for(adapter = allAdapters; adapter != NULL; adapter = adapter->next)
-    {
+    for(adapter = allAdapters; adapter != NULL; adapter = adapter->next) {
+		if(adapter->flags & PCAP_IF_LOOPBACK) continue;
 		m_ccbNetCard.AddString(adapter->description);
     }
 	pcap_freealldevs(allAdapters);
 
 
 	m_ccbNetCard.SetCurSel(0);
-	for (i=0;i<m_ccbNetCard.GetCount();i++)
-	{
+	for (i=0;i<m_ccbNetCard.GetCount();i++)	{
 		m_ccbNetCard.GetLBText(i,szTemp);
-		if (strcmp(szTemp,Config.m_csNetCard)==0)
-		{
+		if (strcmp(szTemp,Config.m_csNetCard)==0) {
 			m_ccbNetCard.SetCurSel(i);
 			break;
 		}
 	}
 	
-	this->AddLog("加载网卡完成");
+	this->Log("加载网卡完成");
 	//////////////////////////////////////////////////////////////////////////
 
 	//使得开始按钮有效，而断开按钮无效
-	this->ChgBtn(TRUE);  
-
+	UpdateStatus(FALSE);
+	
 	if (Config.m_bAutologon == TRUE)
 	{
 		ShowWindow(SW_HIDE);
@@ -191,39 +197,6 @@ BOOL CLuzj_ZTEDlg::OnInitDialog()
 	}
 	SetProcessWorkingSetSize(GetCurrentProcess(),-1,-1);
 	return TRUE;  // return TRUE  unless you set the focus to a control
-}
-
-void CLuzj_ZTEDlg::ChgBtn(bool bStart,char * szMsg)
-{
-	if (bStart)
-	{
-		GetDlgItem(IDC_LOGOFF)->EnableWindow(FALSE);
-		GetDlgItem(IDC_START)->EnableWindow(TRUE);
-	} 
-	else
-	{
-		GetDlgItem(IDC_LOGOFF)->EnableWindow(TRUE);
-		GetDlgItem(IDC_START)->EnableWindow(FALSE);
-	}
-	if (szMsg!=NULL)
-	{
-		SetBubble("提示",szMsg);
-		MessageBox(szMsg,"错误",MB_ICONERROR|MB_OK);
-	}
-}
-
-
-void CLuzj_ZTEDlg::AddLog(CString addStr)
-{
-	time_t t=time(NULL);
-	char szTime[MAX_STRING];
-	strftime(szTime,MAX_STRING,"%H:%M:%S",localtime(&t));	
-	if (m_lcLog.GetItemCount()>80)
-	{
-		m_lcLog.DeleteAllItems();
-	}
-	m_lcLog.InsertItem(0,szTime);	
-	m_lcLog.SetItemText(0,1,addStr);
 }
 
 void CLuzj_ZTEDlg::OnSysCommand(UINT nID, LPARAM lParam)
@@ -332,45 +305,99 @@ HCURSOR CLuzj_ZTEDlg::OnQueryDragIcon()
 
 void CLuzj_ZTEDlg::OnStart() 
 {
+	UpdateStatus(TRUE);
+
 	//////////////////////////////////////////////////////////////////////////
 	//		先存放设置参数
-	CString str,strUser,strPass,strTemp;
+	CString strTemp;
 
 	//取得用户名密码
-	this->getUserInfo();
-	if (m_usernameLen<1 || m_passwordLen<1)
-	{
-		this->ChgBtn(TRUE,"用户名或者密码太短!");
-		return;	
-	}
-	this->ChgBtn(FALSE);
+	GetDlgItem(IDC_USERNAME)->GetWindowText((char*)m_username, sizeof(m_username));
+	m_usernameLen=strlen((char*)m_username);
+	GetDlgItem(IDC_PWD)->GetWindowText((char*)m_password, sizeof(m_password));
+	m_passwordLen=strlen((char*)m_password);
 
+	
+	if (m_usernameLen<1 || m_passwordLen<1)	{
+		this->Log("用户名或者密码太短!"); UpdateStatus(FALSE); return;	
+	}
+	
 	GetDlgItem(IDC_NETCARD)->GetWindowText(strTemp);
 	Config.m_csNetCard=strTemp;
-
-	GetDlgItem(IDC_USERNAME)->GetWindowText(strUser);
-	if (IsDlgButtonChecked(IDC_REMEMBER))
-	{
-		GetDlgItem(IDC_PWD)->GetWindowText(strPass);
+	
+	if (IsDlgButtonChecked(IDC_REMEMBER)) {		
 		Config.m_bRememberPWD=TRUE;
-	}
-	else
-	{
-		strPass="";
+	} else {		
 		Config.m_bRememberPWD=FALSE;
 	}
 
-	Config.m_csLastUser=strUser;	
-	Config.m_UserInfo[strUser]=strPass;
+	Config.m_csLastUser=(char*)m_username;
+	Config.m_UserInfo[(char*)m_username]=(char*)m_password;
 
 	Config.SaveConfig();
 	//////////////////////////////////////////////////////////////////////////
-
 	SetBubble("提示",STR_AppName" 开始联网认证……");
+		
+	char m_errorBuffer[PCAP_ERRBUF_SIZE];
+	int retcode = 0;
+		
+	/////////////////////////////////////////////////////////////////////////
+	//寻找所选的网卡的MAC	
+	if (GetMacIP(Config.m_csNetCard, m_ip, m_MacAdd) != 0)	{
+		if(m_MacAdd[0] == 0 && m_MacAdd[1] == 0 && m_MacAdd[2] == 0 && 
+			m_MacAdd[3] == 0 && m_MacAdd[4] == 0 && m_MacAdd[5] == 0) {
+			Log("GetMacIP:no mac address."); UpdateStatus(FALSE);
+			return;
+		}
+	} else {
+		Log("MAC:%02X-%02X-%02X-%02X-%02X-%02X", m_MacAdd[0], m_MacAdd[1], m_MacAdd[2], 
+			m_MacAdd[3], m_MacAdd[4], m_MacAdd[5]);
+	}
+	//////////////////////////////////////////////////////////////////////////
+	// 打开指定适配器
+	m_adapterHandle=pcap_open_live(DescriptionToName(Config.m_csNetCard),65536,1,Config.m_iTimeout,m_errorBuffer);
+    if(m_adapterHandle == NULL) {	
+		Log("pcap_open_live:%s", m_errorBuffer); UpdateStatus(FALSE);
+		return;
+    }
 
-	DWORD dwPID;
-	m_AuthThread=CreateThread(NULL,0,CLuzj_ZTEDlg::StartAuth,this,0,&dwPID);
+	char	FilterStr[100];		//包过滤字符串
+	struct bpf_program	mfcode;	
+
+	sprintf(FilterStr, "(ether proto 0x888e) and (ether dst host %02x:%02x:%02x:%02x:%02x:%02x)",
+			m_MacAdd[0],m_MacAdd[1],m_MacAdd[2],m_MacAdd[3],m_MacAdd[4],m_MacAdd[5]);
+
+    if((retcode=pcap_compile(m_adapterHandle, &mfcode, FilterStr, 1, 0xff))==-1
+		||(retcode=pcap_setfilter(m_adapterHandle, &mfcode))==-1)
+    {
+		Log("pcap_compile & pcap_setfilter:%s", pcap_strerror(retcode));
+		pcap_close(m_adapterHandle); UpdateStatus(FALSE);
+		return;
+    }
+
+	CPacket packet;	
+	//////////////////////////////////////////////////////////////////////////
+	///开始认证包
+    if(!(retcode=packet.send_packet_start(m_adapterHandle,m_MacAdd))) {   
+		Log("send_packet_start:(%d)%s", retcode, pcap_geterr(m_adapterHandle));	 UpdateStatus(FALSE);	
+		return;
+    }
+	Log("Client:EAPOL_START...");
+
+	m_AuthThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)eap_thread, this, 0, 0);
 }
+
+DWORD WINAPI CLuzj_ZTEDlg::eap_thread(void *para)
+{
+	CLuzj_ZTEDlg *Dlg = (CLuzj_ZTEDlg*)para;	
+
+	pcap_loop(Dlg->m_adapterHandle,-1,CLuzj_ZTEDlg::get_packet,(u_char*)Dlg);
+
+	pcap_close(Dlg->m_adapterHandle);
+	return 0;
+}
+
+    
 
 DWORD WINAPI CLuzj_ZTEDlg::GetMacIP(const char *adaptername, char ip[16], unsigned char mac[6])
 {
@@ -403,7 +430,9 @@ DWORD WINAPI CLuzj_ZTEDlg::GetMacIP(const char *adaptername, char ip[16], unsign
 	memset(ip, 0, 16);	memset(mac, 0, 6);
 
     for(adapter = allAdapters; adapter != NULL; adapter= adapter->next) {
-		if (strcmp(adapter->description,adaptername)==0) break;
+		if (strcmp(adapter->description,adaptername)==0){
+			break;
+		}
     }
  	
 	if(adapter != NULL) {
@@ -417,7 +446,9 @@ DWORD WINAPI CLuzj_ZTEDlg::GetMacIP(const char *adaptername, char ip[16], unsign
 			pAdapterInfo = pAdapterInfo->Next;
 		};
 	}
+	
 	free(AdapterInfo);	pcap_freealldevs(allAdapters);
+	
 	return 0;
 }
 
@@ -442,92 +473,34 @@ DWORD WINAPI CLuzj_ZTEDlg::IpconfigRenew()
 	return 0;
 }
 
-DWORD WINAPI CLuzj_ZTEDlg::ZteAuth(const char *username, const char *password, 
-								   const char *adaptername)
+void CLuzj_ZTEDlg::Log (const char *fmt, ...)
 {
-	char ip[16];
-	unsigned char mac[6];
-	if(GetMacIP(adaptername, ip, mac) != 0) return 1;
+    va_list args;
+    char msg[MAX_STRING];
+    va_start (args, fmt);
+    vsnprintf (msg, MAX_STRING, fmt, args);
+    va_end (args);
 
-	pcap_t	* adapterhandle;
-	if((adapterhandle=pcap_open_live(adaptername,65536,1,1000,NULL)) == NULL) {		
-		return 2;
-    }
+	time_t t=time(NULL);
+	char szTime[MAX_STRING];
+	strftime(szTime,MAX_STRING,"%H:%M:%S",localtime(&t));	
+	strcat(szTime, " "); strcat(szTime, msg); strcat(szTime, "\r\n");
 
-	//包过滤字符串
-	char	FilterStr[100];		
-	struct bpf_program	mfcode;	
-	const u_char		*captured;
-	struct pcap_pkthdr	*header;
-	snprintf(FilterStr, 100, "(ether proto 0x888e) and (ether dst host %02x:%02x:%02x:%02x:%02x:%02x)",
-			mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
-    if(pcap_compile(adapterhandle, &mfcode, FilterStr, 1, 0xff)==-1
-		||pcap_setfilter(adapterhandle, &mfcode)==-1) {
-		return 3;
-    } 	
-
-	//zte auth
-	CPacket packet;
-//	packet.send_packet_logoff(adapterhandle,mac);
-
-	if(!packet.send_packet_start(adapterhandle,mac))   return 4;
-	if(pcap_next_ex(adapterhandle, &header, &captured) != 1) return 5;
-	
-	if(!packet.send_packet_response_Identity(adapterhandle,captured,mac,(u_char*)username,strlen(username))) return 6;
-	if(pcap_next_ex(adapterhandle, &header, &captured) != 1) return 7;
-
-	if(!packet.send_packet_response_MD5(adapterhandle,captured,mac,
-										(u_char*)username,strlen(username),
-										(u_char*)password,strlen(password))) return 8;
-	if(pcap_next_ex(adapterhandle, &header, &captured) != 1) return 9;
-	if(captured[18] != 0x03)	return 10;
-
-	IpconfigRenew(); GetMacIP(adaptername, ip, mac);
-
-	const int trytime = 5;	int i;
-	pcap_set_timeout(adapterhandle, Config.m_iTimeout * 1000);
-	while(TRUE) {
-		if(pcap_next_ex(adapterhandle, &header, &captured) != 1) break;
-		if(captured[15]!=0x03 && captured[18]!=0x01) continue;
-		for(i = 0 ; i < trytime; i++) {
-			if(!packet.send_packet_key2(adapterhandle,captured,mac)) break;
-			Sleep(500);
-		}
-		if(i >= trytime) return 11;
-//web auth
-		if(Config.m_bWebAuth && Config.m_csWebAuthUrl.GetLength() > 0){
-			if(Config.m_bEnableWebAccount) {
-				WebAuth(Config.m_csWebUsername, Config.m_csWebPassword, ip, Config.m_csWebAuthUrl);
-			} else {
-				WebAuth(username, password, ip, Config.m_csWebAuthUrl);
-			}
-		}
-	}
-	
-	return -100;
+	int nLength = editLog->SendMessage(WM_GETTEXTLENGTH);
+    editLog->SetSel(nLength, nLength);
+    editLog->ReplaceSel(szTime);
+	editLog->SendMessage(WM_VSCROLL,SB_BOTTOM,0);
 }
 
-DWORD WINAPI CLuzj_ZTEDlg::StartAuth(LPVOID pParam)
+char* CLuzj_ZTEDlg::DescriptionToName(const char *description)
 {
-	CLuzj_ZTEDlg* Dlg=(CLuzj_ZTEDlg*)pParam;
-	int retcode = 0;
-	const int	DefaultTimeout=1000;
-	
-	/////////////////////////////////////////////////////////////////////////
-	//寻找所选的网卡的MAC
-	IP_ADAPTER_INFO AdapterInfo[16];
-	DWORD dwBufLen = sizeof(AdapterInfo);
-	DWORD dwStatus = GetAdaptersInfo(AdapterInfo,&dwBufLen);
- 	PIP_ADAPTER_INFO pAdapterInfo = AdapterInfo;
-
 	pcap_if_t* adapter;							//临时存放适配器
 	pcap_if_t* allAdapters;						//适配器列表
 	char m_errorBuffer[ PCAP_ERRBUF_SIZE ];		//错误信息缓冲区
-	if(pcap_findalldevs(&allAdapters, m_errorBuffer) == -1 || allAdapters == NULL)
-	{
-		Dlg->ChgBtn(TRUE,"读取网卡信息失败，请确保你安装了WinPcap!");
+	static char name[MAX_STRING];
+	if(pcap_findalldevs(&allAdapters, m_errorBuffer) == -1 || allAdapters == NULL)	{		
 		pcap_freealldevs(allAdapters);
-		return 0;
+		return NULL;
 	}
     for(adapter = allAdapters; adapter != NULL; adapter= adapter->next)
     {
@@ -536,315 +509,122 @@ DWORD WINAPI CLuzj_ZTEDlg::StartAuth(LPVOID pParam)
 			break;
 		}
     }
-
-	do{
-		if (strstr(adapter->name,pAdapterInfo->AdapterName)>0)
-		{
-			Dlg->m_MacAdd[0]=pAdapterInfo->Address[0];
-			Dlg->m_MacAdd[1]=pAdapterInfo->Address[1];
-			Dlg->m_MacAdd[2]=pAdapterInfo->Address[2];
-			Dlg->m_MacAdd[3]=pAdapterInfo->Address[3];
-			Dlg->m_MacAdd[4]=pAdapterInfo->Address[4];
-			Dlg->m_MacAdd[5]=pAdapterInfo->Address[5];
-
-			break;
-		}
-	}while(pAdapterInfo = pAdapterInfo->Next);
-
-	CString csMac;
-	if (!pAdapterInfo)
-	{
-		Dlg->ChgBtn(TRUE,"神奇的错误，居然没有找到网卡的MAC!");
-		return 0;
-	} else {
-		csMac.Format("MAC地址:%02X:%02X:%02X:%02X:%02X:%02X", 
-			Dlg->m_MacAdd[0], Dlg->m_MacAdd[1], Dlg->m_MacAdd[2],
-			Dlg->m_MacAdd[3], Dlg->m_MacAdd[4], Dlg->m_MacAdd[5]);
-		Dlg->AddLog(csMac);
-	}
-
-	if (pAdapterInfo->DhcpEnabled!=1)//适配器是否启用了动态主机配置协议（DHCP）
-	{				
-		Dlg->ChgBtn(TRUE,"请先去 控制面板--管理--服务 里面，将DHCP服务启动!");
-		return 0;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	// 打开指定适配器
-    if((Dlg->m_adapterHandle=pcap_open_live(adapter->name,65536,1,DefaultTimeout,m_errorBuffer)) == NULL)
-    {
-		Dlg->ChgBtn(TRUE,"无法打开网卡!");
-		pcap_freealldevs(allAdapters);
-		return 0;
-    }
+	if(adapter != NULL) strncpy(name, adapter->name, MAX_STRING);
 	pcap_freealldevs(allAdapters);
+	return name;
+}
 
+char * CLuzj_ZTEDlg::HttpAuth(BOOL bForce = FALSE)
+{
+	static char *msg = NULL;
+	if((Config.m_bWebAuth && Config.m_csWebAuthUrl.GetLength() > 0) || bForce) {
+		if(Config.m_bEnableWebAccount) {
+			msg = WebAuth(Config.m_csWebUsername, Config.m_csWebPassword, m_ip, Config.m_csWebAuthUrl);
+		} else {
+			msg = WebAuth((const char *)m_username, (const char *)m_password, m_ip, Config.m_csWebAuthUrl);
+		}
+	}
+	return msg;
+}
 
-	Dlg->AddLog("打开了指定网卡适配器");
+void CLuzj_ZTEDlg::UpdateStatus(BOOL bOnline)
+{
 	
-
-	char	FilterStr[100];		//包过滤字符串
-	struct bpf_program	mfcode;	
-	const u_char		*captured;
-	struct pcap_pkthdr	*header;
-
-	sprintf(FilterStr, "(ether proto 0x888e) and (ether dst host %02x:%02x:%02x:%02x:%02x:%02x)",
-			Dlg->m_MacAdd[0],Dlg->m_MacAdd[1],Dlg->m_MacAdd[2],Dlg->m_MacAdd[3],Dlg->m_MacAdd[4],Dlg->m_MacAdd[5]);
-
-    if(pcap_compile(Dlg->m_adapterHandle, &mfcode, FilterStr, 1, 0xff)==-1
-		||pcap_setfilter(Dlg->m_adapterHandle, &mfcode)==-1)
-    {
-		Dlg->ChgBtn(TRUE,"过滤包设置错误!");
-		return 0;
-    }	
-
-	CPacket packet;
-	time_t t1,t2;
-
-	//////////////////////////////////////////////////////////////////////////
-	///开始认证包
-    if(!packet.send_packet_start(Dlg->m_adapterHandle,Dlg->m_MacAdd))
-    {
-        Dlg->ChgBtn(TRUE,"EAPOL-Start包发送失败!");
-		Dlg->AddLog("EAPOL-Start包发送失败!");
-		return 0;
-    }
-	Dlg->AddLog("发送 EAPOL-Start 包，请求认证");
-	//////////////////////////////////////////////////////////////////////////
-	//接收回应包
-	t1=time(NULL);
-	retcode=pcap_next_ex(Dlg->m_adapterHandle, &header, &captured);
-	t2=time(NULL);
-	while(retcode!=1 && t2-t1<Config.m_iTimeout)
-	{
-		Sleep(1000);
-		retcode=pcap_next_ex(Dlg->m_adapterHandle, &header, &captured);
-		t2=time(NULL);
-	}
-	if (retcode!=1)
-	{
-		Dlg->ChgBtn(TRUE,"对于EAPOL-Start包,服务器响应超时!");
-		Dlg->AddLog("对于EAPOL-Start包,服务器响应超时!");
-		return 0;
-	}
-	//////////////////////////////////////////////////////////////////////////
-	//发送EAP-Identity包
-	if(!packet.send_packet_response_Identity(Dlg->m_adapterHandle,captured,Dlg->m_MacAdd,Dlg->m_username,Dlg->m_usernameLen))
-	{
-		Dlg->ChgBtn(TRUE,"EAP-Identity包发送失败!");
-		return 0;
-	}
-	Dlg->AddLog("发送 EAP-Identity 包，提交账号");
-	//////////////////////////////////////////////////////////////////////////
-	//接收回应包
-	t1=time(NULL);
-	retcode=pcap_next_ex(Dlg->m_adapterHandle, &header, &captured);
-	t2=time(NULL);
-	while(retcode!=1 && t2-t1<Config.m_iTimeout)
-	{
-		Sleep(1000);
-		retcode=pcap_next_ex(Dlg->m_adapterHandle, &header, &captured);
-		t2=time(NULL);
-	}
-	if (retcode!=1)
-	{
-		Dlg->ChgBtn(TRUE,"对于EAP-Identity包,服务器响应超时!");
-		Dlg->AddLog("对于EAP-Identity包,服务器响应超时!");
-		return 0;
-	}
-	//////////////////////////////////////////////////////////////////////////
-	//发送MD5挑战包
-    if(!packet.send_packet_response_MD5(Dlg->m_adapterHandle,captured,Dlg->m_MacAdd,
-										Dlg->m_username,Dlg->m_usernameLen,Dlg->m_password,Dlg->m_passwordLen))
-    {
-        Dlg->ChgBtn(TRUE,"MD5-Challenge包发送失败!");
-		return 0;
-    }
-	Dlg->AddLog("发送 MD5-Challenge 包，提交密码");
-	//////////////////////////////////////////////////////////////////////////
-	//接收回应包
-	t1=time(NULL);
-	retcode=pcap_next_ex(Dlg->m_adapterHandle, &header, &captured);
-	t2=time(NULL);
-	while(retcode!=1 && t2-t1<Config.m_iTimeout)
-	{
-		Sleep(1000);
-		retcode=pcap_next_ex(Dlg->m_adapterHandle, &header, &captured);
-		t2=time(NULL);
-	}
-	if (retcode!=1)
-	{
-		Dlg->ChgBtn(TRUE,"对于 MD5-Challenge 包,服务器响应超时!");
-		Dlg->AddLog("对于 MD5-Challenge 包,服务器响应超时!");
-		return 0;
-	}
-	if (captured[18]==0x03)
-	{
-		Dlg->AddLog("服务器认证通过");
-	} 
-	else
-	{
-		Dlg->ChgBtn(TRUE,"服务器认证失败,请查看日志信息!");		
-		Dlg->AddLog(captured+24);
-		return 0;
-	}
-	//////////////////////////////////////////////////////////////////////////
-
-	Dlg->ShowWindow(SW_HIDE);
-
-	SHELLEXECUTEINFO ShExecInfo = {0};
-	TCHAR tempBuffer[MAX_STRING];
-	CString strSystemDirectory;
-	GetSystemDirectory( tempBuffer, MAX_STRING);
-	strSystemDirectory.Format(_T("%s\\ipconfig.exe"),tempBuffer);
-	ShExecInfo.cbSize	= sizeof(SHELLEXECUTEINFO);
-	ShExecInfo.fMask		= SEE_MASK_NOCLOSEPROCESS;
-	ShExecInfo.lpFile		= strSystemDirectory;		
-	ShExecInfo.lpParameters = _T("/renew");	
-	ShExecInfo.nShow	= SW_HIDE;
-	ShellExecuteEx(&ShExecInfo);
+	const char *m2[] = {"Offline", "Online"};
+	m_bAuth = bOnline;
+	int i = (bOnline ? 1 : 0);
 	
-	int iRnt =WaitForSingleObject(ShExecInfo.hProcess,Config.m_iTimeout*1000);
-	if (iRnt == WAIT_TIMEOUT) 
-	{
-		Dlg->SetBubble("提示","  获取IP超时,中断认证!");
-		return 0;
-	}
-	else if (iRnt == WAIT_FAILED)
-	{
-		Dlg->SetBubble("提示","  获取IP失败,中断认证!");
-		return 0;
-	}
-	else
-	{
-		Dlg->SetBubble("提示","  认证成功!");
+	
+	this->Log("status:%s", m2[i]);
+
+	if(m_bAuth) {
+		m_startTime = time(NULL);
+		ShowWindow(SW_HIDE);
 	}
 
-		
-	dwBufLen = sizeof(AdapterInfo);
-	dwStatus = GetAdaptersInfo(AdapterInfo,&dwBufLen);
- 	pAdapterInfo = AdapterInfo;
+	GetDlgItem(IDC_USERNAME)->EnableWindow(!bOnline);
+	GetDlgItem(IDC_PWD)->EnableWindow(!bOnline);
+	GetDlgItem(IDC_NETCARD)->EnableWindow(!bOnline);
+	GetDlgItem(IDC_START)->EnableWindow(!bOnline);
 
-	if(pcap_findalldevs(&allAdapters, m_errorBuffer) == -1 || allAdapters == NULL)
-	{
-		Dlg->ChgBtn(TRUE,"读取网卡信息失败，请确保你安装了WinPcap!");
-		pcap_freealldevs(allAdapters);
-		return 0;
-	}
-	Dlg->m_ip[0] = 0;
-    for(adapter = allAdapters; adapter != NULL; adapter= adapter->next)
-    {
-		if (strcmp(adapter->description,Config.m_csNetCard)==0)
-		{
-			pcap_addr *paddr = adapter->addresses;
-			sockaddr_in *sin;
-			for(;paddr; paddr = paddr->next)
-			{
-				sin = (struct sockaddr_in *)paddr->addr;
-				if(sin->sin_family == AF_INET) {
-					strncpy(Dlg->m_ip, inet_ntoa(sin->sin_addr), 16);				
-					break;
+	GetDlgItem(IDC_LOGOFF)->EnableWindow(bOnline);
+
+}
+
+void CLuzj_ZTEDlg::get_packet(u_char *args, const struct pcap_pkthdr *pcaket_header, const u_char *packet)
+{
+	int retcode;
+	static int good = 0;
+	CLuzj_ZTEDlg *Dlg = (CLuzj_ZTEDlg*)args;
+	/* declare pointers to packet headers */
+	CPacket P;
+	if(packet[15] == 0x00) { //eap_packet
+		if(packet[18] == 0x01) {//request
+			if(packet[22] == 0x01) { //identity
+				Dlg->Log("Server:Request Identity...");
+				if(!(retcode=P.send_packet_response_Identity(Dlg->m_adapterHandle,
+					packet,Dlg->m_MacAdd,Dlg->m_username,Dlg->m_usernameLen)))	{
+					Dlg->Log("send_packet_response_Identity:(%d)%s", retcode, pcap_geterr(Dlg->m_adapterHandle));					
+					Dlg->UpdateStatus(FALSE); return;					
+				}
+				Dlg->Log("Client:Response Identity:%s", Dlg->m_username);
+			} else if(packet[22] == 0x04) {//md5 challenge
+				Dlg->Log("Server:Request MD5 Chanllenge...");
+				if(!(retcode=P.send_packet_response_MD5(Dlg->m_adapterHandle,packet,Dlg->m_MacAdd,
+					Dlg->m_username,Dlg->m_usernameLen,Dlg->m_password,Dlg->m_passwordLen))) {
+					Dlg->Log("send_packet_response_MD5:(%d)%s", retcode, pcap_geterr(Dlg->m_adapterHandle));
+					Dlg->UpdateStatus(FALSE); return;
+				}
+				Dlg->Log("Client:Response MD5 Chanllenge");				
+			} else {//unknown
+				Dlg->Log("Unknown EAPOL Type:0x%02X", packet[22]);
+			}
+		} else if(packet[18] == 0x03) {//successful
+			SetProcessWorkingSetSize(GetCurrentProcess(),-1,-1);
+			Dlg->UpdateStatus(TRUE);
+			if (Dlg->GetMacIP(Config.m_csNetCard, Dlg->m_ip, Dlg->m_MacAdd) != 0)	{
+				Dlg->Log("GetMacIP:no IP address.");		
+			} else {
+				Dlg->Log("IP:%s", Dlg->m_ip);
+			}
+			if(Config.m_bWebAuth && Config.m_csWebAuthUrl.GetLength() > 0){
+				char *msg; int i;
+				for(i = 0; i < 3; i++) {
+					msg = Dlg->HttpAuth();
+					if(msg == NULL) {							
+						Dlg->Log("网页认证成功!");	
+						if(Config.m_bAutoUpdate) Dlg->CheckUpdate();
+						break;
+					} else {				
+						Dlg->Log("HttpAuth:%s", msg);			
+					}
+					Sleep(3000);
+				}
+				if(i >= 3) {
+					Dlg->Log("网页认证失败，请手动认证");
 				}
 			}
-			break;
+		} else if(packet[18] == 0x04) {//fail
+			Dlg->UpdateStatus(FALSE);
+			AfxMessageBox("服务器认证失败,请查看日志信息!");			
+			Dlg->Log("failed...");
+			Dlg->Log((char*)packet+24);	
+			return;
+		} else {//unknown
+			Dlg->Log("Unknown EAP Type:0x%02X", packet[18]);
 		}
-    }
-	pcap_freealldevs(allAdapters);
-
-	CString csIP;
-	if (Dlg->m_ip[0] == 0)
-	{
-		Dlg->ChgBtn(TRUE,"神奇的错误，居然没有找到网卡的IP地址!");
-		return 0;
-	} else {
-		csIP.Format("IP地址:%s", Dlg->m_ip);
-		Dlg->AddLog(csIP);
+	} else if(packet[15] == 0x03) {//key		
+		if(!(retcode=P.send_packet_key2(Dlg->m_adapterHandle,packet,Dlg->m_MacAdd))) {
+			Dlg->Log("send_packet_key2:(%d)%s", retcode, pcap_geterr(Dlg->m_adapterHandle));
+			Dlg->UpdateStatus(FALSE);  return;
+		}	
+		if(good <= 3) Dlg->Log(good++ == 3 ? "正常在线。" : "send_packet_key2...");					
+		Dlg->HttpAuth();
+	} else {//unknown
+		Dlg->Log("Unknown Type:0x%02X", packet[15]);
 	}
-
-	//
-	// 进行网页认证
-	//
-	
-	if(Config.m_bWebAuth && Config.m_csWebAuthUrl.GetLength() > 0){
-		char *msg;
-		int i;
-		for(i = 0; i < 3; i++) {
-			if(Config.m_bEnableWebAccount) {
-				msg = WebAuth(Config.m_csWebUsername, Config.m_csWebPassword, Dlg->m_ip, Config.m_csWebAuthUrl);
-			} else {
-				msg = WebAuth((const char *)Dlg->m_username, (const char *)Dlg->m_password, Dlg->m_ip, Config.m_csWebAuthUrl);
-			}
-			if(msg == NULL) {			
-				Dlg->AddLog("网页认证成功!");
-				break;
-			} else {				
-				Dlg->AddLog(msg);			
-			}
-			Sleep(3000);
-		}
-		if(i >= 3) {
-			Dlg->ChgBtn(FALSE,"网页认证失败，请稍后手动进行网页认证!");
-		}
-	}
-
-
-	Dlg->m_bAuth=TRUE;
-	Dlg->m_startTime =time(NULL);
-	SetProcessWorkingSetSize(GetCurrentProcess(),-1,-1);
-	int good = 0;
-	int iTimeOut=Config.m_iTimeout*2;
-	while (Dlg->m_bAuth)
-	{
-		t1=time(NULL);
-		retcode=pcap_next_ex(Dlg->m_adapterHandle, &header, &captured);
-		t2=time(NULL);
-		while(Dlg->m_bAuth && (t2-t1)<iTimeOut
-			&& (captured[15]!=0x03 && captured[18]!=0x01 || retcode!=1))
-		{
-			Sleep(200);
-			retcode=pcap_next_ex(Dlg->m_adapterHandle, &header, &captured);
-			t2=time(NULL);
-		}
-		if (t2-t1>=iTimeOut)
-		{
-			Dlg->ChgBtn(TRUE,"接收EAPOL-Key包超时,估计网络已经中断!");
-			Dlg->AddLog("接收EAPOL-Key包超时,估计网络已经中断!");
-			return 0;
-		}
-		/*
-		if(!packet.send_packet_key1(Dlg->m_adapterHandle,captured,Dlg->m_MacAdd))
-		{
-			Dlg->ChgBtn(TRUE,"回应EAPOL-Key1 包错误!");
-			Dlg->AddLog("回应EAPOL-Key1 包错误!");
-			return 0;
-		}
-		*/
-		if(!packet.send_packet_key2(Dlg->m_adapterHandle,captured,Dlg->m_MacAdd))
-		{
-			Dlg->ChgBtn(TRUE,"回应EAPOL-Key 包错误!");
-			Dlg->AddLog("回应EAPOL-Key 包错误!");
-			return 0;
-		}
-		
-		if(good < 3) {
-			Dlg->AddLog("发送 EAPOL-Key 包，维持连接");
-			good++;
-		}
-		else if(good == 3) {
-			Dlg->AddLog("已正常工作，将维持连接信息将被忽略");
-			good = 4;
-		}
-		
-		if(Config.m_bWebAuth && Config.m_csWebAuthUrl.GetLength() > 0) {
-			if(Config.m_bEnableWebAccount) {
-				WebAuth(Config.m_csWebUsername, Config.m_csWebPassword, Dlg->m_ip, Config.m_csWebAuthUrl);
-			} else {
-				WebAuth((const char *)Dlg->m_username, (const char *)Dlg->m_password, Dlg->m_ip, Config.m_csWebAuthUrl);
-			}
-		}
-	}
-
-    return 0;
+   
+    return;
 }
 
 //========================OnLogoff======================================
@@ -853,42 +633,26 @@ void CLuzj_ZTEDlg::OnLogoff()
 	if(Config.m_bWebLogout && strlen(Config.m_csWebLogoutUrl) > 0) {
 		char *msg = WebLogout(this->m_ip, Config.m_csWebLogoutUrl);
 		if(msg == NULL) {
-			this->AddLog("网页认证已下线!");
+			this->Log("网页认证已下线!");
 		} else {
-			this->AddLog("网页认证下线失败!");
-			this->AddLog(msg);
+			this->Log("WebLogout:%s", msg);			
 		}
 	}
 
 	CPacket packet;
 	packet.send_packet_logoff(m_adapterHandle,m_MacAdd);
+	pcap_breakloop(m_adapterHandle);
+	//pcap_close(m_adapterHandle);
 
-	this->ChgBtn(TRUE);
-
-	m_bAuth=FALSE;
+	this->UpdateStatus(FALSE);
 
 	//等待，如果500ms后没有自动退出，则强制结束
 	if (::WaitForSingleObject(this->m_AuthThread,500) == WAIT_TIMEOUT)	
 	{
 		::TerminateThread(this->m_AuthThread ,0);
 	}
-
-	m_StatusBar.SetText("        状态: 已经下线!",1,0);
-	this->AddLog("已经下线!");
 }
 //========================OnLogoff======================================
-
-
-//========================getUserInfo======================================
-void CLuzj_ZTEDlg::getUserInfo()
-{
-	UpdateData();
-	m_usernameLen=m_user.GetLength();
-	m_passwordLen=m_pass.GetLength();
-	strncpy((char*)m_username, m_user, sizeof(m_username));
-	strncpy((char*)m_password, m_pass, sizeof(m_password));
-}
-//========================getUserInfo======================================
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -896,9 +660,7 @@ void CLuzj_ZTEDlg::getUserInfo()
 void CLuzj_ZTEDlg::OnExit() 
 {
 	ShowWindow(SW_HIDE);
-	if (m_bAuth)
-	{
-		m_bAuth=!m_bAuth;
+	if (m_bAuth) {		
 		this->OnLogoff();
 	}
 	CDialog::OnOK();
@@ -918,19 +680,14 @@ void CLuzj_ZTEDlg::OnTimer(UINT nIDEvent)
 		OnStart();
 	}
 
-	if (m_bAuth)
-	{
+	if (m_bAuth) {
 		t -= m_startTime;
-		strftime(szTime,MAX_STRING,"        状态:  在线时间%H:%M:%S:",gmtime(&t));
+		strftime(szTime,MAX_STRING,"状态: 在线时间%H:%M:%S",gmtime(&t));
 		m_StatusBar.SetText(szTime,1,0);
-	}
-	else
-	{
-		m_StatusBar.SetText("        状态:  未联网",1,0);
+	} else {
+		m_StatusBar.SetText("状态:  未联网",1,0);
 	}
 		
-//	m_AuthThread=CreateThread(NULL,0,CLuzj_ZTEDlg:::ZteAuth,this,0,&dwPID);
-
 	CDialog::OnTimer(nIDEvent);
 }
 
@@ -968,53 +725,6 @@ void CLuzj_ZTEDlg::OnSelchangeUsername()
 	CString str;
 	m_ccb_username.GetLBText(m_ccb_username.GetCurSel(), str);	
 	GetDlgItem(IDC_PWD)->SetWindowText(Config.m_UserInfo[str]);	
-}
-
-void CLuzj_ZTEDlg::OnTest() 
-{
-//	char szTemp[MAX_STRING];
-
-/*
-	MIB_IFTABLE *pIfTable; 
-    MIB_IFROW *pIfRow; 
-	pIfTable = (MIB_IFTABLE *) malloc(sizeof (MIB_IFTABLE)); 
-	DWORD len=sizeof(MIB_IFTABLE);
-	if (GetIfTable(pIfTable,&len,TRUE) == ERROR_INSUFFICIENT_BUFFER)
-	{
-		free(pIfTable); 
-		pIfTable = (MIB_IFTABLE *)malloc(len);
-	}
-	if (GetIfTable(pIfTable,&len,TRUE)==NO_ERROR)
-	{
-		MessageBox("OK");
-		for (int i=0;i<pIfTable->dwNumEntries;i++)
-		{
-				//if (pIfTable->table[i].dwOperStatus==MIB_IF_OPER_STATUS_CONNECTED)
-				//{
-					sprintf(szTemp,"%d",pIfTable->table[i].dwOperStatus);
-					MessageBox(szTemp);
-				//}
-		}
-	}
-
-	//加载网卡信息
-	char m_errorBuffer[ PCAP_ERRBUF_SIZE ];		//错误信息缓冲区
-	pcap_if_t		* allAdapters;				//适配器列表
-	if(pcap_findalldevs(&allAdapters, m_errorBuffer) == -1 || allAdapters == NULL)
-	{
-		MessageBox("读取网卡信息失败，请确保你安装了WinPcap!","错误",MB_ICONERROR|MB_OK);
-		pcap_freealldevs(allAdapters);
-		CDialog::OnCancel();
-	}
-	
-	pcap_if_t* adapter;//临时存放适配器
-    for(adapter = allAdapters; adapter != NULL; adapter = adapter->next)
-    {
-		MessageBox(adapter->description);
-    }
-	pcap_freealldevs(allAdapters);
-
-*/
 }
 
 void CLuzj_ZTEDlg::OnSetting() 
