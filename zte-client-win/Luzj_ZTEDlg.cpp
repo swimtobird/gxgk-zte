@@ -145,7 +145,7 @@ BOOL CLuzj_ZTEDlg::OnInitDialog()
 
 	Log("app version:%s", STR_Version);
 	Log("winpcap version:%s", pcap_lib_version());
-	Log("OS version:%d", GetOSVersion());
+	Log("OS version:%s", GetOSVersion());
 
 	//////////////////////////////////////////////////////////////////////////
 	char szTemp[MAX_STRING];
