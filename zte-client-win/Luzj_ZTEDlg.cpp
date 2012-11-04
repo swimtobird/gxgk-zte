@@ -584,7 +584,9 @@ void CLuzj_ZTEDlg::get_packet(u_char *args, const struct pcap_pkthdr *pcaket_hea
 		} else if(packet[18] == 0x03) {//successful
 			SetProcessWorkingSetSize(GetCurrentProcess(),-1,-1);
 			Dlg->UpdateStatus(TRUE);
-			Dlg->IpconfigRenew();
+			retcode = Dlg->IpconfigRenew();
+			if(retcode != 0) Dlg->Log("Ipconfig/Renew return %d with timeout %d", retcode, Config.m_iTimeout);
+
 			if (Dlg->GetMacIP(Config.m_csNetCard, Dlg->m_ip, Dlg->m_MacAdd) != 0)	{
 				Dlg->Log("GetMacIP:no IP address.");		
 			} else {
