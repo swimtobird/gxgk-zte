@@ -56,6 +56,7 @@ public:
 	char*	HttpAuth(BOOL bForce);
 	void	UpdateStatus(BOOL bOnline);
 	char *	GetOSVersion();
+	char *	GetAdapterInfo(const char *descript);
 
 	static void	get_packet(u_char *args, const struct pcap_pkthdr *pcaket_header, const u_char *packet);
 	static DWORD WINAPI eap_thread(void *para);

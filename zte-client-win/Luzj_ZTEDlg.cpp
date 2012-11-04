@@ -105,9 +105,10 @@ char *CLuzj_ZTEDlg::GetOSVersion()
 	static char ver[MAX_STRING];
 	OSVERSIONINFO os;
 	strncpy(ver, "unknown", MAX_STRING);
-	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
+	ZeroMemory(&os, sizeof(OSVERSIONINFO));
+	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	if(GetVersionEx(&os)) {
-		_snprintf(ver, MAX_STRING, "%d.%d.%d.%s", 
+		_snprintf(ver, MAX_STRING, "%d.%d.%d.%d.%s", 
 			os.dwMajorVersion, os.dwMinorVersion, os.dwBuildNumber, 
 			os.dwPlatformId, os.szCSDVersion);
 	}
@@ -232,6 +233,75 @@ void CLuzj_ZTEDlg::OnSysCommand(UINT nID, LPARAM lParam)
 		CDialog::OnSysCommand(nID, lParam);
 	}
 }
+
+char *CLuzj_ZTEDlg::GetAdapterInfo(const char *descript)
+{
+	static char info[MAX_STRING];
+	char *adaptername = DescriptionToName(descript);
+	char temp[MAX_STRING];
+	
+	if(adaptername == NULL) return NULL;
+
+	_snprintf(temp, MAX_STRING, "adapter:%s\r\n", descript); strncpy(info, temp, MAX_STRING);
+	
+
+	PIP_ADAPTER_INFO AdapterInfo = NULL;
+
+	DWORD dwBufLen = sizeof(IP_ADAPTER_INFO);
+	DWORD dwStatus;
+	AdapterInfo = (PIP_ADAPTER_INFO)malloc(dwBufLen);
+	if(AdapterInfo == NULL) return "GetAdapterInfo:malloc1 failed";
+	dwStatus = GetAdaptersInfo(AdapterInfo,&dwBufLen);	
+	if(dwStatus == ERROR_BUFFER_OVERFLOW) {
+		free(AdapterInfo); 
+		AdapterInfo = (PIP_ADAPTER_INFO)malloc(dwBufLen);
+		if(AdapterInfo == NULL) return "GetAdapterInfo:malloc2 failed";
+		dwStatus = GetAdaptersInfo(AdapterInfo,&dwBufLen);			
+	}
+	if(dwStatus != NO_ERROR) {
+		if(AdapterInfo != NULL) free(AdapterInfo);
+		return "GetAdapterInfo:GetAdaptersInfo failed";
+	}
+
+	char *name = DescriptionToName(adaptername);	
+	
+	if(name != NULL) {
+		PIP_ADAPTER_INFO pAdapterInfo = AdapterInfo;		
+		while(pAdapterInfo) {
+			if (strstr(name,pAdapterInfo->AdapterName) >= 0) {
+
+				_snprintf(temp, MAX_STRING, "\tDHCP Enabled:%s", pAdapterInfo->DhcpEnabled ? "YES" : "NO" ); 
+				strcat(info, temp); strcat(info, "\r\n");
+
+				_snprintf(temp, MAX_STRING, "\tIP:%s", pAdapterInfo->IpAddressList.IpAddress.String); 
+				strcat(info, temp); strcat(info, "\r\n");
+
+				_snprintf(temp, MAX_STRING, "\tMASK:%s", pAdapterInfo->IpAddressList.IpMask.String); 
+				strcat(info, temp); strcat(info, "\r\n");
+
+				_snprintf(temp, MAX_STRING, "\tGateWay:%s", pAdapterInfo->GatewayList.IpAddress.String); 
+				strcat(info, temp); strcat(info, "\r\n");
+
+				if(MIB_IF_TYPE_ETHERNET != pAdapterInfo->Type) {
+					_snprintf(temp, MAX_STRING, "\tType:%d [warning]", pAdapterInfo->Type); 
+					strcat(info, temp); strcat(info, "\r\n");
+				}
+
+				_snprintf(temp, MAX_STRING, "\tDHCP Server:%s", pAdapterInfo->DhcpServer.IpAddress.String); 
+				strcat(info, temp);
+
+				break;
+			}
+			pAdapterInfo = pAdapterInfo->Next;
+		};
+	} else {
+		return "GetAdapterInfo:DescriptionToName failed";
+	}
+	
+	free(AdapterInfo);
+	return info;
+}
+
 void CLuzj_ZTEDlg::SetBubble(char * title,char * content,int timeout)
 {
 	if (Config.m_bShowBubble==TRUE)
@@ -440,25 +510,14 @@ DWORD WINAPI CLuzj_ZTEDlg::GetMacIP(const char *adaptername, char ip[16], unsign
 		return -2;
 	}
 
-	pcap_if_t* adapter;							//ÁÙÊ±´æ·ÅÊÊÅäÆ÷
-	pcap_if_t* allAdapters;						//ÊÊÅäÆ÷ÁĞ±í
-	
-	if(pcap_findalldevs(&allAdapters, NULL) == -1 || allAdapters == NULL) {		
-		free(AdapterInfo); pcap_freealldevs(allAdapters);	return -1;
-	}
+	char *name = DescriptionToName(adaptername);
 	
 	memset(ip, 0, 16);	memset(mac, 0, 6);
 
-    for(adapter = allAdapters; adapter != NULL; adapter= adapter->next) {
-		if (strcmp(adapter->description,adaptername)==0){
-			break;
-		}
-    }
- 	
-	if(adapter != NULL) {
+	if(name != NULL) {
 		PIP_ADAPTER_INFO pAdapterInfo = AdapterInfo;		
 		while(pAdapterInfo) {
-			if (strstr(adapter->name,pAdapterInfo->AdapterName) >= 0) {
+			if (strstr(name,pAdapterInfo->AdapterName) >= 0) {
 				memcpy(mac, pAdapterInfo->Address, 6);
 				strncpy(ip, pAdapterInfo->IpAddressList.IpAddress.String, 16);
 				break;
@@ -467,7 +526,7 @@ DWORD WINAPI CLuzj_ZTEDlg::GetMacIP(const char *adaptername, char ip[16], unsign
 		};
 	}
 	
-	free(AdapterInfo);	pcap_freealldevs(allAdapters);
+	free(AdapterInfo);
 	
 	return 0;
 }
@@ -519,15 +578,10 @@ char* CLuzj_ZTEDlg::DescriptionToName(const char *description)
 	char m_errorBuffer[ PCAP_ERRBUF_SIZE ];		//´íÎóĞÅÏ¢»º³åÇø
 	static char name[MAX_STRING];
 	if(pcap_findalldevs(&allAdapters, m_errorBuffer) == -1 || allAdapters == NULL)	{		
-		pcap_freealldevs(allAdapters);
-		return NULL;
+		pcap_freealldevs(allAdapters);	return NULL;
 	}
-    for(adapter = allAdapters; adapter != NULL; adapter= adapter->next)
-    {
-		if (strcmp(adapter->description,Config.m_csNetCard)==0)
-		{
-			break;
-		}
+    for(adapter = allAdapters; adapter != NULL; adapter= adapter->next) {
+		if (strcmp(adapter->description, description)==0) break;
     }
 	if(adapter != NULL) strncpy(name, adapter->name, MAX_STRING);
 	pcap_freealldevs(allAdapters);
@@ -605,11 +659,11 @@ void CLuzj_ZTEDlg::get_packet(u_char *args, const struct pcap_pkthdr *pcaket_hea
 			retcode = Dlg->IpconfigRenew();
 			if(retcode != 0) Dlg->Log("Ipconfig/Renew return %d with timeout %d", retcode, Config.m_iTimeout);
 
-			if (Dlg->GetMacIP(Config.m_csNetCard, Dlg->m_ip, Dlg->m_MacAdd) != 0)	{
-				Dlg->Log("GetMacIP:no IP address.");		
-			} else {
-				Dlg->Log("IP:%s", Dlg->m_ip);
-			}
+			char *info = Dlg->GetAdapterInfo((LPCSTR)Config.m_csNetCard);
+			if(info == NULL) Dlg->Log("GetAdapterInfo: NULL");
+			else{
+				Dlg->Log(info);
+			}		
 			
 			if(Config.m_bWebAuth && Config.m_csWebAuthUrl.GetLength() > 0){
 				char *msg; int i;
