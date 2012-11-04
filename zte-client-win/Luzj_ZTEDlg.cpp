@@ -100,6 +100,20 @@ int CLuzj_ZTEDlg::CheckUpdate()
 	return 1;
 }
 
+char *CLuzj_ZTEDlg::GetOSVersion()
+{
+	static char ver[MAX_STRING];
+	OSVERSIONINFO os;
+	strncpy(ver, "unknown", MAX_STRING);
+	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
+	if(GetVersionEx(&os)) {
+		_snprintf(ver, MAX_STRING, "%d.%d.%d.%s", 
+			os.dwMajorVersion, os.dwMinorVersion, os.dwBuildNumber, 
+			os.dwPlatformId, os.szCSDVersion);
+	}
+	return ver;
+}
+
 BOOL CLuzj_ZTEDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
@@ -128,6 +142,10 @@ BOOL CLuzj_ZTEDlg::OnInitDialog()
 	SetTimer(1,1000,NULL);
 	//开始的时候先将日志框隐藏
 	OnLogshow();
+
+	Log("app version:%s", STR_Version);
+	Log("winpcap version:%s", pcap_lib_version());
+	Log("OS version:%d", GetOSVersion());
 
 	//////////////////////////////////////////////////////////////////////////
 	char szTemp[MAX_STRING];
