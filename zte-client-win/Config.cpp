@@ -102,6 +102,8 @@ void CConfig::SaveConfig()
 	//启用自动更新
 	WritePrivateProfileString("config","AutoUpdate",m_bAutoUpdate==TRUE?"1":"0",pszFullPath);
 
+	WritePrivateProfileString("config","Debug",m_bDebug==TRUE?"1":"0",pszFullPath);
+
 	HKEY hRun;
 	LONG kResult = ::RegOpenKeyEx(	HKEY_CURRENT_USER ,
 									"Software\\Microsoft\\Windows\\CurrentVersion\\Run",
@@ -207,6 +209,8 @@ void CConfig::LoadConfig()
 	retCode=GetPrivateProfileInt("config","AutoUpdate",0,pszFullPath);
 	m_bAutoUpdate=(retCode==1?TRUE:FALSE);
 
+	retCode=GetPrivateProfileInt("config","Debug",1,pszFullPath);//默认输出调试信息
+	m_bDebug=(retCode==1?TRUE:FALSE);
 
 
 	//读取所有账号密码参数

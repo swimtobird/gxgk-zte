@@ -52,6 +52,8 @@ public:
 
 	CString	m_csNetCard;	//上次所选择的网卡名字
 
+	bool m_bDebug; //是否输出调试信息
+
 	
 /*==================以下配置参数尚未被启用================
 	bool m_bDHCP;			//是否启用DHCP
