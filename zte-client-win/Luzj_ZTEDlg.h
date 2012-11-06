@@ -26,6 +26,30 @@ class CLuzj_ZTEDlg : public CDialog
 {
 // Construction
 public:
+
+	enum STATUS {
+		INIT, 
+		AUTHING, 
+		AUTHED, 
+		DHCPING, 
+		DHCPED, 
+		HTTPING, 
+		HTTPED, 
+		ONLINE, 
+		OFFLINE
+	};
+
+	enum DEBUG_LEVEL{
+		I_INFO,
+		I_MSG,
+		I_WARN,
+		I_ERR
+	};
+
+
+
+	STATUS status;
+
 	CLuzj_ZTEDlg(CWnd* pParent = NULL);	// standard constructor
 
 	CSystemTray		m_tray;					//系统托盘图标
@@ -33,6 +57,7 @@ public:
 	bool			m_bAuth;				//是否已经认证
 	time_t			m_startTime;			//认证的开始时间
 	HANDLE			m_AuthThread;			//认证的线程句柄,以便控制线程
+	HANDLE			m_DHCPThread;			//DHCP的线程句柄,以便控制线程
 	RECT			m_rc;					//存放着窗体的矩形区域
 
     pcap_t			* m_adapterHandle;		//适配器句柄
@@ -49,17 +74,23 @@ public:
 
 	CEdit	*editLog;
 
+	CStringArray   m_csAdapters;
 
 	void	SetBubble(char * title,char * content,int timeout=1000);	
-	void	Log (const char *fmt, ...);
-	char*	DescriptionToName(const char *description);
+	void	Log (int level, const char *fmt, ...);
+		
 	char*	HttpAuth(BOOL bForce);
 	void	UpdateStatus(BOOL bOnline);
 	char *	GetOSVersion();
 	char *	GetAdapterInfo(const char *descript);
 
+	static char *	GetGUID(const char *name);
+	static char *	ToNPFName(const char *GUID);
+	static char *	ToTCPName(const char *GUID);
+
 	static void	get_packet(u_char *args, const struct pcap_pkthdr *pcaket_header, const u_char *packet);
 	static DWORD WINAPI eap_thread(void *para);
+	static DWORD WINAPI dhcp_thread(void *para);
 	DWORD WINAPI GetMacIP(const char *adaptername, char ip[16], unsigned char mac[6]);
 	DWORD WINAPI IpconfigRenew();
 	int CheckUpdate();

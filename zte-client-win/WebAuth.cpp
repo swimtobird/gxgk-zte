@@ -34,9 +34,12 @@ char * WebAuth(const char * username, const char *password, const char *ip, cons
 				}
 			}
 		}
-		strncpy(msg, curl_easy_strerror(res), MAX_BUFFER_SIZE);
+		if(res != CURLE_OK)	strncpy(msg, curl_easy_strerror(res), MAX_BUFFER_SIZE);		
 		/* always cleanup */ 
 		curl_easy_cleanup(curl);
+
+		if(res == CURLE_OK)	return NULL;
+
 	}
 	
 	return msg;
