@@ -149,6 +149,9 @@ BOOL CLuzj_ZTEDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
+	//读取配置到文件配置对象中去
+	Config.LoadConfig();
+
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 	
@@ -184,9 +187,7 @@ BOOL CLuzj_ZTEDlg::OnInitDialog()
 	//////////////////////////////////////////////////////////////////////////	
 	int i=0,k=0;
 	CString str;
-
-	//读取配置到文件配置对象中去
-	Config.LoadConfig();
+	
 	//if(Config.m_bAutoUpdate) CheckUpdate();
 
 	CheckDlgButton(IDC_REMEMBER,Config.m_bRememberPWD?BST_CHECKED:BST_UNCHECKED);
@@ -523,22 +524,24 @@ DWORD WINAPI CLuzj_ZTEDlg::dhcp_thread(void *para)
 	Dlg->Log(I_INFO, "dhcp thread started.");
 
 	retcode = Dlg->IpconfigRenew();
-	Dlg->status = DHCPED;
-
+	
 	if(retcode != 0) Dlg->Log(I_INFO, "Ipconfig/Renew return %d", retcode);
+	else Dlg->status = DHCPED;	
 	
 	if(retcode == 0 && (Config.m_bWebAuth && Config.m_csWebAuthUrl.GetLength() > 0)){
 		Dlg->status = HTTPING;
 		char *msg; int i;
 		for(i = 0; i < 3; i++) {
-			msg = Dlg->HttpAuth(FALSE);
-			if(msg == NULL) {							
-				Dlg->Log(I_MSG, "网页认证成功.");	
-				Dlg->status = HTTPED;
-				if(Config.m_bAutoUpdate) Dlg->CheckUpdate();
-				break;
-			} else {			
-				Dlg->Log(I_INFO, "HttpAuth:%s", msg);			
+			if(Dlg->GetMacIP(Config.m_csNetCard, Dlg->m_ip, Dlg->m_MacAdd) == 0) {
+				msg = Dlg->HttpAuth(FALSE);
+				if(msg == NULL) {							
+					Dlg->Log(I_MSG, "网页认证成功.");	
+					Dlg->status = HTTPED;
+					if(Config.m_bAutoUpdate) Dlg->CheckUpdate();
+					break;
+				} else {		
+					Dlg->Log(I_INFO, "HttpAuth:%s", msg);			
+				}
 			}
 			Sleep(3000);
 		}
