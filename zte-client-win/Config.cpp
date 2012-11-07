@@ -102,6 +102,9 @@ void CConfig::SaveConfig()
 	//启用自动更新
 	WritePrivateProfileString("config","AutoUpdate",m_bAutoUpdate==TRUE?"1":"0",pszFullPath);
 
+	//启用自动更新
+	WritePrivateProfileString("config","AutoFilter",m_bAutoFilter==TRUE?"1":"0",pszFullPath);
+
 	WritePrivateProfileString("config","Debug",m_bDebug==TRUE?"1":"0",pszFullPath);
 
 	HKEY hRun;
@@ -174,7 +177,7 @@ void CConfig::LoadConfig()
 	
 
 	int retCode;
-	m_iTimeout=GetPrivateProfileInt("config","Timeout",180,pszFullPath);
+	m_iTimeout=GetPrivateProfileInt("config","Timeout",10,pszFullPath);
 
 	//读取是否自动保存密码,默认为是
 	retCode=GetPrivateProfileInt("config","RememberPWD",1,pszFullPath);
@@ -211,6 +214,9 @@ void CConfig::LoadConfig()
 
 	retCode=GetPrivateProfileInt("config","Debug",1,pszFullPath);//默认输出调试信息
 	m_bDebug=(retCode==1?TRUE:FALSE);
+
+	retCode=GetPrivateProfileInt("config","AutoFilter",0,pszFullPath);
+	m_bAutoFilter=(retCode==1?TRUE:FALSE);
 
 
 	//读取所有账号密码参数

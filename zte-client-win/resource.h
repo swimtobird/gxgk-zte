@@ -40,6 +40,7 @@
 #define IDC_WEB_PASSWORD                1029
 #define IDC_CHK_REAUTH_TIME             1030
 #define IDC_TXT_REAUTH_TIME             1031
+#define IDC_CHK_AUTO_FILTER             1032
 #define IDC_CHK_AUTO_UPDATE             1033
 #define IDC_BTN_AUTO_UPDATE             1034
 #define IDC_EDIT_LOG                    1035

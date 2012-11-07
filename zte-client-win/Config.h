@@ -44,6 +44,7 @@ public:
 	CString m_csReauthTime;
 
 	bool m_bAutoUpdate;
+	bool m_bAutoFilter;
 
 
 	CMapStringToString   m_UserInfo;	//存放所有的账号密码信息

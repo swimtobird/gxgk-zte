@@ -26,6 +26,7 @@ class CLuzj_ZTEDlg : public CDialog
 {
 // Construction
 public:
+	int TestAdapter(const char *name);
 
 	enum STATUS {
 		INIT, 
@@ -91,7 +92,7 @@ public:
 	static void	get_packet(u_char *args, const struct pcap_pkthdr *pcaket_header, const u_char *packet);
 	static DWORD WINAPI eap_thread(void *para);
 	static DWORD WINAPI dhcp_thread(void *para);
-	DWORD WINAPI GetMacIP(const char *adaptername, char ip[16], unsigned char mac[6]);
+	DWORD WINAPI GetMacIP(const char *adaptername, char *ip, unsigned char *mac);
 	DWORD WINAPI IpconfigRenew();
 	int CheckUpdate();
 	
