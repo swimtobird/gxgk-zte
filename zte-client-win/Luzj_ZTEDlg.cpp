@@ -222,15 +222,27 @@ BOOL CLuzj_ZTEDlg::OnInitDialog()
 
 	k = 0; m_csAdapters.RemoveAll();
 	pcap_if_t* adapter;//临时存放适配器
-    for(adapter = allAdapters; adapter != NULL; adapter = adapter->next) {
+	char *szGuid = NULL;	
+	Log(I_INFO, "LastNetcard:%s", Config.m_csNetCard);
+    for(k = 0, adapter = allAdapters; adapter != NULL; adapter = adapter->next, k++) {
 		if(adapter->flags & PCAP_IF_LOOPBACK) continue;	
-		m_csAdapters.Add(GetGUID(adapter->name)); m_ccbNetCard.AddString(adapter->description); 
-		if(k == 0 && stricmp(GetGUID(adapter->name), Config.m_csNetCard) != 0) k++;
+
+		szGuid = GetGUID(adapter->name);
+		if(Config.m_bAutoFilter && TestAdapter(szGuid) != 0) continue;
+
+		Log(I_INFO, "load netcard:(%d)%s(%s)", k, szGuid, adapter->description);
+		m_csAdapters.Add(szGuid); m_ccbNetCard.AddString(adapter->description); 		
     }
 	pcap_freealldevs(allAdapters);
+
+	for(k = m_ccbNetCard.GetCount() - 1; k >= 0; k--) {
+		if(stricmp(m_csAdapters[k], Config.m_csNetCard) == 0) break;		
+	}
 	
-	if(k < 0) k = 0;
-	if(m_ccbNetCard.GetCount() > 0) m_ccbNetCard.SetCurSel(k);
+	if(k >= 0 && m_ccbNetCard.GetCount() > k) {		
+		m_ccbNetCard.SetCurSel(k);
+		Log(I_INFO, "select netcard:(%d)%s", k, m_csAdapters[k]);
+	}
 	
 	this->Log(I_INFO, "加载网卡完成");
 	//////////////////////////////////////////////////////////////////////////
@@ -457,7 +469,7 @@ void CLuzj_ZTEDlg::OnStart()
 		
 	/////////////////////////////////////////////////////////////////////////
 	//寻找所选的网卡的MAC	
-	if (GetMacIP(Config.m_csNetCard, m_ip, m_MacAdd) != 0)	{
+	if (GetMacIP(Config.m_csNetCard, NULL, m_MacAdd) != 0)	{
 		if(m_MacAdd[0] == 0 && m_MacAdd[1] == 0 && m_MacAdd[2] == 0 && 
 			m_MacAdd[3] == 0 && m_MacAdd[4] == 0 && m_MacAdd[5] == 0) {
 			Log(I_ERR, "GetMacIP:no mac address."); UpdateStatus(FALSE);
@@ -501,6 +513,7 @@ void CLuzj_ZTEDlg::OnStart()
 	Log(I_INFO, "Client:EAPOL_START...");
 
 	m_AuthThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)eap_thread, this, 0, 0);
+	if(m_AuthThread == NULL) Log(I_INFO, "CreateThread:(%d)", GetLastError());
 }
 
 DWORD WINAPI CLuzj_ZTEDlg::eap_thread(void *para)
@@ -532,7 +545,7 @@ DWORD WINAPI CLuzj_ZTEDlg::dhcp_thread(void *para)
 		Dlg->status = HTTPING;
 		char *msg; int i;
 		for(i = 0; i < 3; i++) {
-			if(Dlg->GetMacIP(Config.m_csNetCard, Dlg->m_ip, Dlg->m_MacAdd) == 0) {
+			if(Dlg->GetMacIP(Config.m_csNetCard, Dlg->m_ip, NULL) == 0) {
 				msg = Dlg->HttpAuth(FALSE);
 				if(msg == NULL) {							
 					Dlg->Log(I_MSG, "网页认证成功.");	
@@ -558,7 +571,7 @@ DWORD WINAPI CLuzj_ZTEDlg::dhcp_thread(void *para)
 }
 
 
-DWORD WINAPI CLuzj_ZTEDlg::GetMacIP(const char *adaptername, char ip[16], unsigned char mac[6])
+DWORD WINAPI CLuzj_ZTEDlg::GetMacIP(const char *adaptername, char *ip, unsigned char *mac)
 {
 
 	PIP_ADAPTER_INFO AdapterInfo = NULL;
@@ -580,14 +593,15 @@ DWORD WINAPI CLuzj_ZTEDlg::GetMacIP(const char *adaptername, char ip[16], unsign
 	}
 
 		
-	memset(ip, 0, 16);	memset(mac, 0, 6);
+	if(ip) memset(ip, 0, 16);	
+	if(mac) memset(mac, 0, 6);
 
 	PIP_ADAPTER_INFO pAdapterInfo = AdapterInfo;	
 	if(adaptername != NULL) {			
 		while(pAdapterInfo) {
 			if (stricmp(adaptername,pAdapterInfo->AdapterName) == 0) {
-				memcpy(mac, pAdapterInfo->Address, 6);
-				strncpy(ip, pAdapterInfo->IpAddressList.IpAddress.String, 16);
+				if(mac) memcpy(mac, pAdapterInfo->Address, 6);
+				if(ip) strncpy(ip, pAdapterInfo->IpAddressList.IpAddress.String, 16);
 				break;
 			}
 			pAdapterInfo = pAdapterInfo->Next;
@@ -905,4 +919,43 @@ void CLuzj_ZTEDlg::OnSetting()
 	if (dlg.DoModal())
 	{
 	}
+}
+
+int CLuzj_ZTEDlg::TestAdapter(const char *name)
+{
+	//寻找所选的网卡的MAC
+	
+	u_char mac[6];	
+	if (GetMacIP(name, NULL, mac) != 0) return -1;
+	//////////////////////////////////////////////////////////////////////////
+	// 打开指定适配器
+	pcap_t *handle=pcap_open_live(ToNPFName(name),65536,1,Config.m_iTimeout, NULL);
+    if(handle == NULL) return -2;
+
+	char	FilterStr[100];		//包过滤字符串
+	struct bpf_program	mfcode;	
+
+	sprintf(FilterStr, "(ether proto 0x888e) and (ether dst host %02x:%02x:%02x:%02x:%02x:%02x)",
+			mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+
+	int retcode;
+    if((retcode=pcap_compile(handle, &mfcode, FilterStr, 1, 0xff))==-1
+		||(retcode=pcap_setfilter(handle, &mfcode))==-1) {		
+		pcap_close(handle); return -3;
+    }
+	
+	CPacket packet;	
+	//////////////////////////////////////////////////////////////////////////
+	///开始认证包
+    if(!(retcode=packet.send_packet_start(handle,mac))) {
+		pcap_close(handle); return -4;
+	}
+	const u_char *captured;
+	struct pcap_pkthdr      *header;
+	char m_errorBuffer[ PCAP_ERRBUF_SIZE ];		//错误信息缓冲区
+	if((retcode=pcap_next_ex(handle, &header, &captured))!=1) {
+		strncpy(m_errorBuffer, pcap_strerror(retcode), PCAP_ERRBUF_SIZE);
+		pcap_close(handle); return -5;
+	}
+	pcap_close(handle); return 0;
 }

@@ -94,6 +94,7 @@ BOOL CSettingDlg::OnInitDialog()
 	CheckDlgButton(IDC_CHK_REAUTH_TIME,Config.m_bReauth?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHK_AUTO_UPDATE,Config.m_bAutoUpdate?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHK_DEBUG,Config.m_bDebug?BST_CHECKED:BST_UNCHECKED);
+	CheckDlgButton(IDC_CHK_AUTO_FILTER,Config.m_bAutoFilter?BST_CHECKED:BST_UNCHECKED);
 
 
 	char szTemp[MAX_STRING];
@@ -132,6 +133,7 @@ void CSettingDlg::OnOK()
 	Config.m_bReauth = (bool)(IsDlgButtonChecked(IDC_CHK_REAUTH_TIME));
 	Config.m_bAutoUpdate = (bool)(IsDlgButtonChecked(IDC_CHK_AUTO_UPDATE));
 	Config.m_bDebug = (bool)(IsDlgButtonChecked(IDC_CHK_DEBUG));
+	Config.m_bAutoFilter = (bool)(IsDlgButtonChecked(IDC_CHK_AUTO_FILTER));
 
 
 	GetDlgItem(IDC_TIMEOUT)->GetWindowText(szTemp,MAX_STRING);
