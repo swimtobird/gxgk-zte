@@ -225,7 +225,7 @@ BOOL CLuzj_ZTEDlg::OnInitDialog()
     for(adapter = allAdapters; adapter != NULL; adapter = adapter->next) {
 		if(adapter->flags & PCAP_IF_LOOPBACK) continue;	
 		m_csAdapters.Add(GetGUID(adapter->name)); m_ccbNetCard.AddString(adapter->description); 
-		if(k == 0 && stricmp(adapter->name, Config.m_csNetCard) != 0) k++;
+		if(k == 0 && stricmp(GetGUID(adapter->name), Config.m_csNetCard) != 0) k++;
     }
 	pcap_freealldevs(allAdapters);
 	
