@@ -145,6 +145,8 @@ char *	CLuzj_ZTEDlg::ToNPFName(const char *GUID)
 	return TCPGUID;
 }
 
+
+
 BOOL CLuzj_ZTEDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
@@ -211,9 +213,9 @@ BOOL CLuzj_ZTEDlg::OnInitDialog()
 
 	//////////////////////////////////////////////////////////////////////////
 	//加载网卡信息	
-	char m_errorBuffer[ PCAP_ERRBUF_SIZE ];		//错误信息缓冲区
+	char errorBuffer[ PCAP_ERRBUF_SIZE ];		//错误信息缓冲区
 	pcap_if_t		* allAdapters;				//适配器列表
-	if(pcap_findalldevs(&allAdapters, m_errorBuffer) == -1 || allAdapters == NULL)
+	if(pcap_findalldevs(&allAdapters, errorBuffer) == -1 || allAdapters == NULL)
 	{
 		MessageBox("读取网卡信息失败，请确保你安装了WinPcap!","错误",MB_ICONERROR|MB_OK);
 		pcap_freealldevs(allAdapters);
@@ -224,14 +226,16 @@ BOOL CLuzj_ZTEDlg::OnInitDialog()
 	pcap_if_t* adapter;//临时存放适配器
 	char *szGuid = NULL;	
 	Log(I_INFO, "LastNetcard:%s", Config.m_csNetCard);
-    for(k = 0, adapter = allAdapters; adapter != NULL; adapter = adapter->next, k++) {
+    for(k = 0, adapter = allAdapters; adapter != NULL; adapter = adapter->next) {
 		if(adapter->flags & PCAP_IF_LOOPBACK) continue;	
 
 		szGuid = GetGUID(adapter->name);
 		if(Config.m_bAutoFilter && TestAdapter(szGuid) != 0) continue;
 
 		Log(I_INFO, "load netcard:(%d)%s(%s)", k, szGuid, adapter->description);
-		m_csAdapters.Add(szGuid); m_ccbNetCard.AddString(adapter->description); 		
+		m_csAdapters.Add(szGuid); m_ccbNetCard.AddString(adapter->description); 
+		
+		k++;
     }
 	pcap_freealldevs(allAdapters);
 
@@ -250,7 +254,7 @@ BOOL CLuzj_ZTEDlg::OnInitDialog()
 	//使得开始按钮有效，而断开按钮无效
 	UpdateStatus(FALSE);
 	
-	if (Config.m_bAutologon == TRUE)
+	if (k >= 0 && Config.m_bAutologon == TRUE)
 	{
 		ShowWindow(SW_HIDE);
 		this->OnStart();
@@ -547,7 +551,7 @@ DWORD WINAPI CLuzj_ZTEDlg::dhcp_thread(void *para)
 		for(i = 0; i < 3; i++) {
 			if(Dlg->GetMacIP(Config.m_csNetCard, Dlg->m_ip, NULL) == 0) {
 				msg = Dlg->HttpAuth(FALSE);
-				if(msg == NULL) {							
+				if(strcmp(msg, "null") == 0) {							
 					Dlg->Log(I_MSG, "网页认证成功.");	
 					Dlg->status = HTTPED;
 					if(Config.m_bAutoUpdate) Dlg->CheckUpdate();
@@ -707,7 +711,7 @@ char * CLuzj_ZTEDlg::HttpAuth(BOOL bForce = FALSE)
 	return msg;
 }
 
-void CLuzj_ZTEDlg::UpdateStatus(BOOL bOnline)
+void CLuzj_ZTEDlg::UpdateStatus(bool bOnline)
 {
 	
 	const char *m2[] = {"Offline", "Online"};
@@ -924,13 +928,16 @@ void CLuzj_ZTEDlg::OnSetting()
 int CLuzj_ZTEDlg::TestAdapter(const char *name)
 {
 	//寻找所选的网卡的MAC
-	
+	char errbuf[PCAP_ERRBUF_SIZE];   /* error buffer */
 	u_char mac[6];	
 	if (GetMacIP(name, NULL, mac) != 0) return -1;
 	//////////////////////////////////////////////////////////////////////////
 	// 打开指定适配器
-	pcap_t *handle=pcap_open_live(ToNPFName(name),65536,1,Config.m_iTimeout, NULL);
-    if(handle == NULL) return -2;
+	pcap_t *handle=pcap_open_live(ToNPFName(name),65536,1,Config.m_iTimeout, errbuf);
+    if(handle == NULL) {
+		Log(I_INFO, "pcap_open_live:%s", errbuf);
+		return -2;
+	}
 
 	char	FilterStr[100];		//包过滤字符串
 	struct bpf_program	mfcode;	

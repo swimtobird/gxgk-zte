@@ -1,12 +1,22 @@
 #include "stdafx.h"
+#include "Define.h"
 #include "AutoUpdate.h"
 
 #define FILETIME_LENGTH	64
 
-static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream)
+static size_t write_file_data(void *ptr, size_t size, size_t nmemb, void *stream)
 {
-  int written = fwrite(ptr, size, nmemb, (FILE *)stream);
-  return written;
+	int written = fwrite(ptr, size, nmemb, (FILE *)stream);
+	return written;
+}
+
+static size_t write_buffer_data(void *ptr, size_t size, size_t nmemb, void *buffer)
+{
+	Buffer *buf = (Buffer*)buffer;
+	if(buf->offset + size >= buf->size) return 0;
+	memcpy(buf->buffer + buf->offset, ptr, size * nmemb);	
+	buf->offset += size * nmemb;
+	return size;
 }
 
 FileInfo *GetFileModifyTime()
@@ -89,7 +99,7 @@ int AutoUpdate()
 	return 4;
 }
 
-int DownLoadFile(const char *savename, const char *url)
+int DownLoadFile(const char *savename, const char *url, const char *ip)
 {
 	FILE *file = NULL;
 	file = fopen(savename, "wb");
@@ -103,8 +113,9 @@ int DownLoadFile(const char *savename, const char *url)
 	if(curl) {	
 		curl_easy_setopt(curl, CURLOPT_URL, url);		
 		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
+		if(ip) curl_easy_setopt(curl, CURLOPT_INTERFACE, ip);
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);//认证之前会自动转跳
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_file_data);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)file);
 		res = curl_easy_perform(curl);
 		/*
@@ -121,8 +132,43 @@ int DownLoadFile(const char *savename, const char *url)
 	}
 	fclose(file);
 
-
 	return 0;
+}
+
+int DownLoadFileToBuffer(char *buffer, int size, const char *url, const char *ip)
+{
+	CURL *curl;
+	CURLcode res;
+	long retcode = 0;
+	Buffer buf;
+
+	buf.buffer = buffer;
+	buf.size = size;
+	buf.offset = 0;	
+	
+	curl = curl_easy_init();
+	if(curl) {
+		curl_easy_setopt(curl, CURLOPT_URL, url);	
+		//curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);			
+		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
+		curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");	
+		if(ip) curl_easy_setopt(curl, CURLOPT_INTERFACE, ip);
+		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);//认证之前会自动转跳
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_buffer_data);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&buf);
+		res = curl_easy_perform(curl);		
+		/*
+		if(res == CURLE_OK) {			
+			res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE , &retcode); 
+			if(res == CURLE_OK && retcode == 200) {				
+				
+			}
+		}
+		*/
+		/* always cleanup */ 
+		curl_easy_cleanup(curl);
+	}
+	return buf.offset;
 }
 
 FileInfo *GetHttpModifyTime(const char* url)

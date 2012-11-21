@@ -46,13 +46,9 @@ static char THIS_FILE[]=__FILE__;
 //////////////////////////////////////////////////////////////////////
 CConfig Config;
 
-
-
-
-
-CConfig::CConfig():m_UserInfo(16)
+CConfig::CConfig()
 {
-
+	
 }
 
 CConfig::~CConfig()
@@ -79,33 +75,19 @@ void CConfig::SaveConfig()
 	sprintf(szTemp,"%d",m_iTimeout);
 	WritePrivateProfileString("config","Timeout",szTemp,pszFullPath);
 
-	//保存是否自动保存密码
-	WritePrivateProfileString("config","RememberPWD",m_bRememberPWD==TRUE?"1":"0",pszFullPath);
+#define WRITE_CONFIG_BOOL_NAME_VAR(n, v)  WritePrivateProfileString("config", n, v?"1":"0", pszFullPath);
 
-	//保存是否网页认证
-	WritePrivateProfileString("config","WebAuth",m_bWebAuth==TRUE?"1":"0",pszFullPath);
-	
-	//保存是否网页注销
-	WritePrivateProfileString("config","WebLogout",m_bWebLogout==TRUE?"1":"0",pszFullPath);
-	
-	//保存是否开机自动运行
-	WritePrivateProfileString("config","Autorun",m_bAutorun==TRUE?"1":"0",pszFullPath);
-	
-	//保存是否自动登录	
-	WritePrivateProfileString("config","Autologon",m_bAutologon==TRUE?"1":"0",pszFullPath);
-	//气泡提示
-	WritePrivateProfileString("config","ShowBubble",m_bShowBubble==TRUE?"1":"0",pszFullPath);
-	//启用网页认证帐号
-	WritePrivateProfileString("config","EnableWebAccount",m_bEnableWebAccount==TRUE?"1":"0",pszFullPath);
-	//启用重新认证时间
-	WritePrivateProfileString("config","Reauth",m_bReauth ==TRUE?"1":"0",pszFullPath);
-	//启用自动更新
-	WritePrivateProfileString("config","AutoUpdate",m_bAutoUpdate==TRUE?"1":"0",pszFullPath);
-
-	//启用自动更新
-	WritePrivateProfileString("config","AutoFilter",m_bAutoFilter==TRUE?"1":"0",pszFullPath);
-
-	WritePrivateProfileString("config","Debug",m_bDebug==TRUE?"1":"0",pszFullPath);
+	WRITE_CONFIG_BOOL_NAME_VAR("RememberPWD", m_bRememberPWD);
+	WRITE_CONFIG_BOOL_NAME_VAR("WebAuth", m_bWebAuth);
+	WRITE_CONFIG_BOOL_NAME_VAR("WebLogout", m_bWebLogout);
+	WRITE_CONFIG_BOOL_NAME_VAR("Autorun", m_bAutorun);
+	WRITE_CONFIG_BOOL_NAME_VAR("Autologon", m_bAutologon);
+	WRITE_CONFIG_BOOL_NAME_VAR("ShowBubble", m_bShowBubble);
+	WRITE_CONFIG_BOOL_NAME_VAR("EnableWebAccount", m_bEnableWebAccount);
+	WRITE_CONFIG_BOOL_NAME_VAR("Reauth", m_bReauth);
+	WRITE_CONFIG_BOOL_NAME_VAR("AutoUpdate", m_bAutoUpdate);
+	WRITE_CONFIG_BOOL_NAME_VAR("AutoFilter", m_bAutoFilter);
+	WRITE_CONFIG_BOOL_NAME_VAR("Debug", m_bDebug);
 
 	HKEY hRun;
 	LONG kResult = ::RegOpenKeyEx(	HKEY_CURRENT_USER ,
@@ -122,7 +104,6 @@ void CConfig::SaveConfig()
 		strcat(pszFilename,".exe");
 		GetFullPathToFile(szTemp,pszFilename);
 		sprintf(pjPath,"\"%s\"",szTemp);
-
 	
 		iPathLen = (strlen(szTemp) +1) *sizeof(char);
 		kResult =::RegQueryValueEx(hRun ,"zte",NULL ,&regsz ,(BYTE *)szTemp ,&iPathLen);
@@ -131,7 +112,6 @@ void CConfig::SaveConfig()
 			iPathLen = (strlen(pjPath) +1) *sizeof(char);
 			kResult =::RegSetValueEx(hRun ,"zte",NULL ,REG_SZ ,(BYTE *)pjPath ,iPathLen);
 		}
-
 	}
 	else
 	{
@@ -139,32 +119,25 @@ void CConfig::SaveConfig()
 	}
 	::RegCloseKey(hRun);
 
+#define WRITE_CONFIG_STRING_NAME_VAR(n, v)  WritePrivateProfileString("config", n, v, pszFullPath);
 
-	//重新认证时间
-	WritePrivateProfileString("config","ReauthTime",m_csReauthTime,pszFullPath);
+	WRITE_CONFIG_STRING_NAME_VAR("ReauthTime", m_csReauthTime);
+	WRITE_CONFIG_STRING_NAME_VAR("netcard", m_csNetCard);
+	WRITE_CONFIG_STRING_NAME_VAR("WebAuthUrl", m_csWebAuthUrl);
+	WRITE_CONFIG_STRING_NAME_VAR("WebLogoutUrl", m_csWebLogoutUrl);
+	WRITE_CONFIG_STRING_NAME_VAR("LastUser", m_csLastUser);
+	WRITE_CONFIG_STRING_NAME_VAR("WebUsername", m_csWebUsername);
+	WRITE_CONFIG_STRING_NAME_VAR("WebPassword", aes_encrypt((LPCTSTR)m_csWebPassword));
 
-	//保存首选的网卡
-	WritePrivateProfileString("config","netcard",m_csNetCard,pszFullPath);
-
-	//保存网页认证地址
-	WritePrivateProfileString("config","WebAuthUrl",m_csWebAuthUrl,pszFullPath);
-
-	//保存网页注销地址
-	WritePrivateProfileString("config","WebLogoutUrl",m_csWebLogoutUrl,pszFullPath);
-	
+#define WRITE_USER(u, p)  WritePrivateProfileString("users", u, aes_encrypt((LPCTSTR)p), pszFullPath);
 	//读取所有账号密码参数	
 	CString user,pass;	
 	POSITION p = Config.m_UserInfo.GetStartPosition();
-	while(p != NULL) {		
+	while(p != NULL) {
 		Config.m_UserInfo.GetNextAssoc(p, user, pass);		
-		if(user.GetLength() > 0)
-			WritePrivateProfileString("users", user, aes_encrypt((LPCTSTR)pass), pszFullPath);		
-	}	
+		if(user.GetLength() > 0) WRITE_USER(user, pass);			
+	}
 
-	WritePrivateProfileString("config","LastUser",m_csLastUser,pszFullPath);
-
-	WritePrivateProfileString("config","WebUsername",m_csWebUsername,pszFullPath);
-	WritePrivateProfileString("config","WebPassword",aes_encrypt((LPCTSTR)m_csWebPassword),pszFullPath);
 
 }
 void CConfig::LoadConfig()
@@ -175,50 +148,22 @@ void CConfig::LoadConfig()
 	char pszFilename[MAX_STRING]=CONFIGNAME;
 	GetFullPathToFile(pszFullPath,pszFilename);
 	
-
-	int retCode;
 	m_iTimeout=GetPrivateProfileInt("config","Timeout",10,pszFullPath);
 
-	//读取是否自动保存密码,默认为是
-	retCode=GetPrivateProfileInt("config","RememberPWD",1,pszFullPath);
-	m_bRememberPWD=(retCode==1?TRUE:FALSE);
+#define LOAD_CONFIG_BOOL_NAME_VAR(n, v, d) v=(GetPrivateProfileInt("config",n,d,pszFullPath)==1);
 
-	//读取是否进行网页认证,默认为是
-	retCode=GetPrivateProfileInt("config","WebAuth",1,pszFullPath);
-	m_bWebAuth=(retCode==1?TRUE:FALSE);
-
-	//读取是否进行网页注销,默认为是
-	retCode=GetPrivateProfileInt("config","WebLogout",0,pszFullPath);
-	m_bWebLogout=(retCode==1?TRUE:FALSE);
-
-	//读取是否开机自动运行,默认为否
-	retCode=GetPrivateProfileInt("config","Autorun",0,pszFullPath);
-	m_bAutorun=(retCode==1?TRUE:FALSE);
-
-	//读取是否自动登录
-	retCode=GetPrivateProfileInt("config","Autologon",0,pszFullPath);
-	m_bAutologon=(retCode==1?TRUE:FALSE);
-
-
-	retCode=GetPrivateProfileInt("config","ShowBubble",1,pszFullPath);
-	m_bShowBubble=(retCode==1?TRUE:FALSE);
-
-	retCode=GetPrivateProfileInt("config","EnableWebAccount",0,pszFullPath);
-	m_bEnableWebAccount=(retCode==1?TRUE:FALSE);
+	LOAD_CONFIG_BOOL_NAME_VAR("RememberPWD", m_bRememberPWD, 1);
+	LOAD_CONFIG_BOOL_NAME_VAR("WebAuth", m_bWebAuth, 1);
+	LOAD_CONFIG_BOOL_NAME_VAR("WebLogout", m_bWebLogout, 0);
+	LOAD_CONFIG_BOOL_NAME_VAR("Autorun", m_bAutorun, 1);
+	LOAD_CONFIG_BOOL_NAME_VAR("Autologon", m_bAutologon, 0);
+	LOAD_CONFIG_BOOL_NAME_VAR("ShowBubble", m_bShowBubble, 1);
+	LOAD_CONFIG_BOOL_NAME_VAR("EnableWebAccount", m_bEnableWebAccount, 0);
+	LOAD_CONFIG_BOOL_NAME_VAR("Reauth", m_bReauth, 1);
+	LOAD_CONFIG_BOOL_NAME_VAR("AutoUpdate", m_bAutoUpdate, 0);
+	LOAD_CONFIG_BOOL_NAME_VAR("Debug", m_bDebug, 1);
+	LOAD_CONFIG_BOOL_NAME_VAR("AutoFilter", m_bAutoFilter, 1);
 	
-	retCode=GetPrivateProfileInt("config","Reauth",0,pszFullPath);
-	m_bReauth=(retCode==1?TRUE:FALSE);
-
-	retCode=GetPrivateProfileInt("config","AutoUpdate",0,pszFullPath);
-	m_bAutoUpdate=(retCode==1?TRUE:FALSE);
-
-	retCode=GetPrivateProfileInt("config","Debug",1,pszFullPath);//默认输出调试信息
-	m_bDebug=(retCode==1?TRUE:FALSE);
-
-	retCode=GetPrivateProfileInt("config","AutoFilter",0,pszFullPath);
-	m_bAutoFilter=(retCode==1?TRUE:FALSE);
-
-
 	//读取所有账号密码参数
 	char szTemp[MAX_STRING];
 	Config.m_UserInfo.RemoveAll();
@@ -233,32 +178,17 @@ void CConfig::LoadConfig()
 		while(*p++);
 	}
 
-	//读取上次所选网卡的名字
-	GetPrivateProfileString("config","LastUser","",szTemp,MAX_STRING,pszFullPath);
-	m_csLastUser=szTemp;
+#define LOAD_CONFIG_STRING_NAME_VAR(n, v, d) {char t[MAX_STRING];GetPrivateProfileString("config",n,d,t,MAX_STRING,pszFullPath);v=t;}
 
-	//读取上次所选网卡的名字
-	GetPrivateProfileString("config","netcard","",szTemp,MAX_STRING,pszFullPath);
-	m_csNetCard=szTemp;
-
-	//读取网页认证地址
-	GetPrivateProfileString("config","WebAuthUrl","http://125.88.59.131:10001/login.do?edubas=113.98.13.29",szTemp,MAX_STRING,pszFullPath);
-	m_csWebAuthUrl=szTemp;
-
-	//读取网页注销地址
-	GetPrivateProfileString("config","WebLogoutUrl","http://125.88.59.131:10001/Logout.do?edubas=113.98.13.29",szTemp,MAX_STRING,pszFullPath);
-	m_csWebLogoutUrl=szTemp;
-
-	GetPrivateProfileString("config","WebUsername","",szTemp,MAX_STRING,pszFullPath);
-	m_csWebUsername=szTemp;
-
-	GetPrivateProfileString("config","WebPassword","",szTemp,MAX_STRING,pszFullPath);
-	m_csWebPassword=aes_decrypt(szTemp);
-
-	GetPrivateProfileString("config","ReauthTime","",szTemp,MAX_STRING,pszFullPath);
-	m_csReauthTime=szTemp;
-
+	LOAD_CONFIG_STRING_NAME_VAR("LastUser", m_csLastUser, "");
+	LOAD_CONFIG_STRING_NAME_VAR("netcard", m_csNetCard, "");
+	LOAD_CONFIG_STRING_NAME_VAR("WebAuthUrl", m_csWebAuthUrl, "http://125.88.59.131:10001/login.do?edubas=113.98.13.29");
+	LOAD_CONFIG_STRING_NAME_VAR("WebLogoutUrl", m_csWebLogoutUrl, "http://125.88.59.131:10001/Logout.do?edubas=113.98.13.29");
+	LOAD_CONFIG_STRING_NAME_VAR("WebUsername", m_csWebUsername, "");
+	LOAD_CONFIG_STRING_NAME_VAR("WebPassword", m_csWebPassword, "");m_csWebPassword=aes_decrypt(m_csWebPassword);
+	LOAD_CONFIG_STRING_NAME_VAR("ReauthTime", m_csReauthTime, "");
 }
+
 void CConfig::LoadDefaultConfig()
 {
 
