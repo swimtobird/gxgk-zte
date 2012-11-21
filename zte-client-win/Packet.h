@@ -16,9 +16,13 @@
 
 class CPacket  
 {
+private:
+	unsigned char broadcast_mac[6];
 public:
 	CPacket();
+	CPacket(const unsigned char *mac);
 	virtual ~CPacket();
+	int set_broadcast_mac(const unsigned char *mac);
 
 	//以下为数据包初始化并发送的函数
 	int send_packet_start(pcap_t * adapterHandle,u_char* MacAdd);						//此为开始的包

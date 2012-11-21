@@ -123,36 +123,30 @@ BOOL CSettingDlg::OnInitDialog()
 
 void CSettingDlg::OnOK()
 {
+	
+#define BIND_BOOL_VAR_CONTROL(v, c) v=(IsDlgButtonChecked(c)==0)?false:true;
+	BIND_BOOL_VAR_CONTROL(Config.m_bAutologon, IDC_CHK_AUTOLOGON);
+	BIND_BOOL_VAR_CONTROL(Config.m_bWebAuth, IDC_CHK_WEB_AUTH);
+	BIND_BOOL_VAR_CONTROL(Config.m_bAutorun, IDC_CHK_AUTORUN);
+	BIND_BOOL_VAR_CONTROL(Config.m_bShowBubble, IDC_CHK_BUBBLE);
+	BIND_BOOL_VAR_CONTROL(Config.m_bWebLogout, IDC_CHK_WEB_LOGOUT);
+	BIND_BOOL_VAR_CONTROL(Config.m_bEnableWebAccount, IDC_CHK_ENABLE_WEBACCOUNT);
+	BIND_BOOL_VAR_CONTROL(Config.m_bReauth, IDC_CHK_REAUTH_TIME);
+	BIND_BOOL_VAR_CONTROL(Config.m_bAutoUpdate, IDC_CHK_AUTO_UPDATE);
+	BIND_BOOL_VAR_CONTROL(Config.m_bDebug, IDC_CHK_DEBUG);
+	BIND_BOOL_VAR_CONTROL(Config.m_bAutoFilter, IDC_CHK_AUTO_FILTER);
+
 	char szTemp[MAX_STRING];
-	Config.m_bAutologon = (bool)(IsDlgButtonChecked(IDC_CHK_AUTOLOGON));
-	Config.m_bWebAuth = (bool)(IsDlgButtonChecked(IDC_CHK_WEB_AUTH));
-	Config.m_bAutorun = (bool)(IsDlgButtonChecked(IDC_CHK_AUTORUN));
-	Config.m_bShowBubble = (bool)(IsDlgButtonChecked(IDC_CHK_BUBBLE));
-	Config.m_bWebLogout = (bool)(IsDlgButtonChecked(IDC_CHK_WEB_LOGOUT));
-	Config.m_bEnableWebAccount = (bool)(IsDlgButtonChecked(IDC_CHK_ENABLE_WEBACCOUNT));
-	Config.m_bReauth = (bool)(IsDlgButtonChecked(IDC_CHK_REAUTH_TIME));
-	Config.m_bAutoUpdate = (bool)(IsDlgButtonChecked(IDC_CHK_AUTO_UPDATE));
-	Config.m_bDebug = (bool)(IsDlgButtonChecked(IDC_CHK_DEBUG));
-	Config.m_bAutoFilter = (bool)(IsDlgButtonChecked(IDC_CHK_AUTO_FILTER));
-
-
 	GetDlgItem(IDC_TIMEOUT)->GetWindowText(szTemp,MAX_STRING);
 	Config.m_iTimeout=atoi(szTemp);
 
-	GetDlgItem(IDC_WEB_AUTH_URL)->GetWindowText(szTemp,MAX_STRING);
-	Config.m_csWebAuthUrl = szTemp;
+#define BIND_STRING_VAR_CONTROL(v, c) {CString t; GetDlgItem(c)->GetWindowText(t); v = t;}
 
-	GetDlgItem(IDC_WEB_LOGOUT_URL)->GetWindowText(szTemp,MAX_STRING);
-	Config.m_csWebLogoutUrl = szTemp;
-
-	GetDlgItem(IDC_WEB_USERNAME)->GetWindowText(szTemp,MAX_STRING);
-	Config.m_csWebUsername = szTemp;
-
-	GetDlgItem(IDC_WEB_PASSWORD)->GetWindowText(szTemp,MAX_STRING);
-	Config.m_csWebPassword = szTemp;
-
-	GetDlgItem(IDC_TXT_REAUTH_TIME)->GetWindowText(szTemp,MAX_STRING);
-	Config.m_csReauthTime = szTemp;
+	BIND_STRING_VAR_CONTROL(Config.m_csWebAuthUrl, IDC_WEB_AUTH_URL);
+	BIND_STRING_VAR_CONTROL(Config.m_csWebLogoutUrl, IDC_WEB_LOGOUT_URL);
+	BIND_STRING_VAR_CONTROL(Config.m_csWebUsername, IDC_WEB_USERNAME);
+	BIND_STRING_VAR_CONTROL(Config.m_csWebPassword, IDC_WEB_PASSWORD);
+	BIND_STRING_VAR_CONTROL(Config.m_csReauthTime, IDC_TXT_REAUTH_TIME);
 
 	Config.SaveConfig();
 	CDialog::OnOK();
@@ -201,7 +195,7 @@ void CSettingDlg::OnChkReauthTime()
 		GetDlgItem(IDC_TXT_REAUTH_TIME)->EnableWindow(TRUE);		
 	}else{
 		GetDlgItem(IDC_TXT_REAUTH_TIME)->EnableWindow(FALSE);		
-	}	
+	}
 }
 
 void CSettingDlg::OnKillfocusTxtReauthTime() 

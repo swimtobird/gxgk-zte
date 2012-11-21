@@ -81,10 +81,9 @@ public:
 	void	Log (int level, const char *fmt, ...);
 		
 	char*	HttpAuth(BOOL bForce);
-	void	UpdateStatus(BOOL bOnline);
+	void	UpdateStatus(bool bOnline);
 	char *	GetOSVersion();
 	char *	GetAdapterInfo(const char *descript);
-
 	static char *	GetGUID(const char *name);
 	static char *	ToNPFName(const char *GUID);
 	static char *	ToTCPName(const char *GUID);

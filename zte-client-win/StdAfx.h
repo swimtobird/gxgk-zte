@@ -32,10 +32,8 @@
 #include "pcap.h"
 #pragma comment(lib, "wpcap.lib")
 
-#pragma warning (disable: 4800)
-
+//#pragma warning (disable: 4800)
 #define CURL_STATICLIB
-
 #include "curl/curl.h"
 #ifdef CURL_STATICLIB
 #ifdef _DEBUG
@@ -46,7 +44,7 @@
 #else
 #pragma comment(lib, "libcurl.lib")
 #endif
-
+//#pragma warning (default: 4800)
 
 #include "WebAuth.h"
 

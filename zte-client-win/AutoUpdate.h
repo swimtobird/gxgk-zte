@@ -8,10 +8,18 @@ typedef struct _FileInfo{
 	size_t filesize;
 } FileInfo;
 
+typedef struct _buffer{
+	char *buffer;
+	size_t size;
+	int offset;
+} Buffer;
+
 static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream);
 int AutoUpdate();
 FileInfo *GetFileModifyTime();
 FileInfo *GetHttpModifyTime(const char *url);
-int DownLoadFile(const char *savename, const char *url);
+char *RandomSessionID(const char *url);
+int DownLoadFile(const char *savename, const char *url, const char *ip = NULL);
+int DownLoadFileToBuffer(char *buffer, int size, const char *url, const char *ip = NULL);
 
 #endif

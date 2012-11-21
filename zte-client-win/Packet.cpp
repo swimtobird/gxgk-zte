@@ -49,12 +49,25 @@ static char THIS_FILE[]=__FILE__;
 
 CPacket::CPacket()
 {
+	static unsigned char default_broadcast_mac[6] = {0x01,0x80,0xc2,0x00,0x00,0x03};
+	//static unsigned char default_broadcast_mac[6] = {0x00,0x19,0xc6,0x31,0xfc,0x77};	
+	set_broadcast_mac(default_broadcast_mac);
+}
 
+CPacket::CPacket(const unsigned char *mac)
+{
+	set_broadcast_mac(mac);
 }
 
 CPacket::~CPacket()
 {
 
+}
+
+int CPacket::set_broadcast_mac(const unsigned char *mac)
+{
+	memcpy(broadcast_mac, mac, 6);
+	return 0;
 }
 
 //======================packet_start======================================
@@ -65,6 +78,7 @@ int CPacket::send_packet_start(pcap_t * adapterHandle,u_char* MacAdd)
 					0x00,0x00,0x00,0x00,0x00,0x00,			//自己MAC
 					0x88,0x8e,0x01,0x01,0x00,0x00	};
 
+	memcpy(packet_start,broadcast_mac,6);
 	memcpy(packet_start+6,MacAdd,6);
 
 	if(pcap_sendpacket(adapterHandle, packet_start,18)!=0)
@@ -84,6 +98,7 @@ int CPacket::send_packet_logoff(pcap_t * adapterHandle,u_char* MacAdd)
 		0x00,0x00,0x00,0x00,0x00,0x00,						//自己MAC
 		0x88,0x8e,0x01,0x02,0x00,0x00	};
 
+	memcpy(packet_logoff,broadcast_mac,6);
 	memcpy(packet_logoff+6,MacAdd,6);
 
 	if(pcap_sendpacket(adapterHandle, packet_logoff,18)!=0)
@@ -117,6 +132,7 @@ int CPacket::send_packet_response_Identity(pcap_t * adapterHandle,const u_char *
 	packet_response_Identity[17] = (u_char)m_usernameLen + 5;
 	packet_response_Identity[21] = (u_char)m_usernameLen + 5;
 
+	memcpy(packet_response_Identity,broadcast_mac,6);
 	memcpy(packet_response_Identity+6,MacAdd,6);
 
 	//来自request包的id
@@ -161,6 +177,7 @@ int CPacket::send_packet_response_MD5(pcap_t * adapterHandle,const u_char* captu
 	packet_response_MD5[17] = (u_char)m_usernameLen + 22;
 	packet_response_MD5[21] = (u_char)m_usernameLen + 22;
 
+	memcpy(packet_response_MD5,broadcast_mac,6);
 	memcpy(packet_response_MD5+6,MacAdd,6);
 
 	//MD5-Challenge的包ID
@@ -243,6 +260,7 @@ int CPacket::send_packet_key1(pcap_t * adapterHandle,const u_char* captured,u_ch
 
 
 	//MAC
+	memcpy(packet_key1,broadcast_mac,6);
 	memcpy(packet_key1+6,MacAdd,6);
 
 	//Replay Counter  +  Key IV 原样复制，24字节
@@ -308,6 +326,7 @@ int CPacket::send_packet_key2(pcap_t * adapterHandle,const u_char* captured,u_ch
 			};
 	
 	//MAC
+	memcpy(packet_key2,broadcast_mac,6);
 	memcpy(packet_key2+6,MacAdd,6);
 	
 	//Replay Counter  +  Key IV 原样复制，24字节
