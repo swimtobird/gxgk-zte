@@ -7,7 +7,7 @@
 </h3>
 <h3>Command Lines</h3>
 Creating command line "rc.exe /l 0x804 /fo"Release/Luzj_ZTE.res" /d "NDEBUG" /d "_AFXDLL" "E:\Develop\Source\gxgk-zte\zte-client-win\Luzj_ZTE.rc"" 
-Creating temporary file "C:\DOCUME~1\share\LOCALS~1\Temp\RSP1704.tmp" with contents
+Creating temporary file "C:\DOCUME~1\share\LOCALS~1\Temp\RSP22.tmp" with contents
 [
 /nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FR"Release/" /Fp"Release/Luzj_ZTE.pch" /Yu"stdafx.h" /Fo"Release/" /Fd"Release/" /FD /c 
 "E:\Develop\Source\gxgk-zte\zte-client-win\aes.cpp"
@@ -21,19 +21,19 @@ Creating temporary file "C:\DOCUME~1\share\LOCALS~1\Temp\RSP1704.tmp" with conte
 "E:\Develop\Source\gxgk-zte\zte-client-win\SystemTray.cpp"
 "E:\Develop\Source\gxgk-zte\zte-client-win\WebAuth.cpp"
 ]
-Creating command line "cl.exe @C:\DOCUME~1\share\LOCALS~1\Temp\RSP1704.tmp" 
-Creating temporary file "C:\DOCUME~1\share\LOCALS~1\Temp\RSP1705.tmp" with contents
+Creating command line "cl.exe @C:\DOCUME~1\share\LOCALS~1\Temp\RSP22.tmp" 
+Creating temporary file "C:\DOCUME~1\share\LOCALS~1\Temp\RSP23.tmp" with contents
 [
 /nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /FR"Release/" /Fp"Release/Luzj_ZTE.pch" /Yc"stdafx.h" /Fo"Release/" /Fd"Release/" /FD /c 
 "E:\Develop\Source\gxgk-zte\zte-client-win\StdAfx.cpp"
 ]
-Creating command line "cl.exe @C:\DOCUME~1\share\LOCALS~1\Temp\RSP1705.tmp" 
-Creating temporary file "C:\DOCUME~1\share\LOCALS~1\Temp\RSP1706.bat" with contents
+Creating command line "cl.exe @C:\DOCUME~1\share\LOCALS~1\Temp\RSP23.tmp" 
+Creating temporary file "C:\DOCUME~1\share\LOCALS~1\Temp\RSP24.bat" with contents
 [
 @echo off
 BPP -Release Define.h
 ]
-Creating command line "C:\DOCUME~1\share\LOCALS~1\Temp\RSP1706.bat"
+Creating command line "C:\DOCUME~1\share\LOCALS~1\Temp\RSP24.bat"
 Compiling resources...
 Compiling...
 StdAfx.cpp
@@ -49,7 +49,7 @@ SettingDlg.cpp
 SystemTray.cpp
 WebAuth.cpp
 Generating Code...
-Creating temporary file "C:\DOCUME~1\share\LOCALS~1\Temp\RSP1707.tmp" with contents
+Creating temporary file "C:\DOCUME~1\share\LOCALS~1\Temp\RSP25.tmp" with contents
 [
 /nologo /subsystem:windows /incremental:no /pdb:"Release/ZTE.pdb" /machine:I386 /out:"Release/ZTE.exe" 
 ".\Release\aes.obj"
@@ -65,13 +65,13 @@ Creating temporary file "C:\DOCUME~1\share\LOCALS~1\Temp\RSP1707.tmp" with conte
 ".\Release\WebAuth.obj"
 ".\Release\Luzj_ZTE.res"
 ]
-Creating command line "link.exe @C:\DOCUME~1\share\LOCALS~1\Temp\RSP1707.tmp"
+Creating command line "link.exe @C:\DOCUME~1\share\LOCALS~1\Temp\RSP25.tmp"
 
-Build++: Release number is 152 
-Build++: Build number is 474 
+Build++: Release number is 153 
+Build++: Build number is 475 
 <h3>Output Window</h3>
 Linking...
-Creating temporary file "C:\DOCUME~1\share\LOCALS~1\Temp\RSP1709.tmp" with contents
+Creating temporary file "C:\DOCUME~1\share\LOCALS~1\Temp\RSP27.tmp" with contents
 [
 /nologo /o"Release/Luzj_ZTE.bsc" 
 ".\Release\StdAfx.sbr"
@@ -85,7 +85,7 @@ Creating temporary file "C:\DOCUME~1\share\LOCALS~1\Temp\RSP1709.tmp" with conte
 ".\Release\SettingDlg.sbr"
 ".\Release\SystemTray.sbr"
 ".\Release\WebAuth.sbr"]
-Creating command line "bscmake.exe @C:\DOCUME~1\share\LOCALS~1\Temp\RSP1709.tmp"
+Creating command line "bscmake.exe @C:\DOCUME~1\share\LOCALS~1\Temp\RSP27.tmp"
 Creating browse info file...
 <h3>Output Window</h3>
 

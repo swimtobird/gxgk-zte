@@ -254,11 +254,7 @@ BOOL CLuzj_ZTEDlg::OnInitDialog()
 	//使得开始按钮有效，而断开按钮无效
 	UpdateStatus(FALSE);
 	
-	if (k >= 0 && Config.m_bAutologon == TRUE)
-	{
-		ShowWindow(SW_HIDE);
-		this->OnStart();
-	}
+	if (k >= 0 && Config.m_bAutologon == TRUE) OnStart();
 	SetProcessWorkingSetSize(GetCurrentProcess(),-1,-1);
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -462,7 +458,8 @@ void CLuzj_ZTEDlg::OnStart()
 	}
 
 	Config.m_csLastUser=(char*)m_username;
-	Config.m_UserInfo[(char*)m_username]=(char*)m_password;
+	if(Config.m_bRememberPWD)
+		Config.m_UserInfo[(char*)m_username]=(char*)m_password;
 
 	Config.SaveConfig();
 	//////////////////////////////////////////////////////////////////////////
@@ -618,7 +615,7 @@ DWORD WINAPI CLuzj_ZTEDlg::GetMacIP(const char *adaptername, char *ip, unsigned 
 	return 0;
 }
 
-#define MAX_DHCP_TIMES	3
+#define MAX_DHCP_TIMES	0x7FFFFFFF
 
 DWORD WINAPI CLuzj_ZTEDlg::IpconfigRenew()
 {
@@ -647,7 +644,7 @@ DWORD WINAPI CLuzj_ZTEDlg::IpconfigRenew()
 		if(stricmp(adaptername, ToTCPName(Config.m_csNetCard)) == 0) {
 			while(1) {
 				if(count <= MAX_DHCP_TIMES) Log(I_INFO, "fetching IP address by DHCP...");	
-				//IpReleaseAddress(&pIfTable->Adapter[i]);
+				IpReleaseAddress(&pIfTable->Adapter[i]);
 				ret = IpRenewAddress(&pIfTable->Adapter[i]);
 				if(ret == NO_ERROR) break;	
 				if(count <= MAX_DHCP_TIMES) {
