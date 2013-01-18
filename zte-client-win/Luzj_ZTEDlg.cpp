@@ -720,7 +720,7 @@ void CLuzj_ZTEDlg::UpdateStatus(bool bOnline)
 
 	if(m_bAuth) {
 		m_startTime = time(NULL);
-		ShowWindow(SW_HIDE);
+		//ShowWindow(SW_HIDE);
 	}
 
 	GetDlgItem(IDC_USERNAME)->EnableWindow(!bOnline);
@@ -757,6 +757,8 @@ void CLuzj_ZTEDlg::get_packet(u_char *args, const struct pcap_pkthdr *pcaket_hea
 					Dlg->UpdateStatus(FALSE); return;
 				}
 				Dlg->Log(I_INFO, "Client:Response MD5 Chanllenge");				
+			} else if(packet[22] == 0x02) {//notification
+				Dlg->Log(I_INFO, "Server Notification:%s", (char*)packet+23);
 			} else {//unknown
 				Dlg->Log(I_INFO, "Unknown EAPOL Type:0x%02X", packet[22]);
 			}
@@ -764,6 +766,7 @@ void CLuzj_ZTEDlg::get_packet(u_char *args, const struct pcap_pkthdr *pcaket_hea
 			Dlg->status = AUTHED;
 			SetProcessWorkingSetSize(GetCurrentProcess(),-1,-1);
 			Dlg->UpdateStatus(TRUE);
+			Dlg->ShowWindow(SW_HIDE);
 			Dlg->Log(I_MSG, "认证成功.");
 
 			if(Dlg->m_DHCPThread == NULL) 
