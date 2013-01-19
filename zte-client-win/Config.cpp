@@ -88,6 +88,7 @@ void CConfig::SaveConfig()
 	WRITE_CONFIG_BOOL_NAME_VAR("AutoUpdate", m_bAutoUpdate);
 	WRITE_CONFIG_BOOL_NAME_VAR("AutoFilter", m_bAutoFilter);
 	WRITE_CONFIG_BOOL_NAME_VAR("Debug", m_bDebug);
+	WRITE_CONFIG_BOOL_NAME_VAR("DHCP", m_bDHCP);
 
 	HKEY hRun;
 	LONG kResult = ::RegOpenKeyEx(	HKEY_CURRENT_USER ,
@@ -163,6 +164,7 @@ void CConfig::LoadConfig()
 	LOAD_CONFIG_BOOL_NAME_VAR("AutoUpdate", m_bAutoUpdate, 0);
 	LOAD_CONFIG_BOOL_NAME_VAR("Debug", m_bDebug, 1);
 	LOAD_CONFIG_BOOL_NAME_VAR("AutoFilter", m_bAutoFilter, 1);
+	LOAD_CONFIG_BOOL_NAME_VAR("DHCP", m_bDHCP, 1);
 	
 	//读取所有账号密码参数
 	char szTemp[MAX_STRING];

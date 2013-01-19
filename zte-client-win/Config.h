@@ -46,6 +46,8 @@ public:
 	bool m_bAutoUpdate;
 	bool m_bAutoFilter;
 
+	bool m_bDHCP;
+
 
 	CMapStringToString   m_UserInfo;	//存放所有的账号密码信息
 

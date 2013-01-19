@@ -45,6 +45,7 @@
 #define IDC_BTN_AUTO_UPDATE             1034
 #define IDC_EDIT_LOG                    1035
 #define IDC_CHK_DEBUG                   1035
+#define IDC_CHK_DHCP                    1036
 
 // Next default values for new objects
 // 
