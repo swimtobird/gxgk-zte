@@ -87,6 +87,7 @@ public:
 	static char *	GetGUID(const char *name);
 	static char *	ToNPFName(const char *GUID);
 	static char *	ToTCPName(const char *GUID);
+	static bool EnableDHCP(const char* wcAdapterName, const bool enable);
 
 	static void	get_packet(u_char *args, const struct pcap_pkthdr *pcaket_header, const u_char *packet);
 	static DWORD WINAPI eap_thread(void *para);

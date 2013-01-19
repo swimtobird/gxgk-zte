@@ -309,7 +309,7 @@ char *CLuzj_ZTEDlg::GetAdapterInfo(const char *name)
 				strncpy(info, temp, MAX_STRING);
 
 				_snprintf(temp, MAX_STRING, "\tDHCP Enabled:%s", pAdapterInfo->DhcpEnabled ? "YES" : "NO" ); 
-				strcat(info, temp); strcat(info, "\r\n");
+				strcat(info, temp); strcat(info, "\r\n");				
 
 				_snprintf(temp, MAX_STRING, "\tIP:%s", pAdapterInfo->IpAddressList.IpAddress.String); 
 				strcat(info, temp); strcat(info, "\r\n");
@@ -332,6 +332,10 @@ char *CLuzj_ZTEDlg::GetAdapterInfo(const char *name)
 			}
 			pAdapterInfo = pAdapterInfo->Next;
 		};
+		if(pAdapterInfo && Config.m_bDHCP && !pAdapterInfo->DhcpEnabled) {
+			Log(I_WARN, "DHCP Config not match ! ");
+			Log(I_MSG, "DHCP is set to fetch IP. ");
+		}
 	} else {
 		return "GetAdapterInfo:DescriptionToName failed";
 	}
@@ -533,14 +537,15 @@ DWORD WINAPI CLuzj_ZTEDlg::dhcp_thread(void *para)
 	
 	Dlg->status = DHCPING;
 
-	int retcode;
+	int retcode = 0;
 
 	Dlg->Log(I_INFO, "dhcp thread started.");
 
-	retcode = Dlg->IpconfigRenew();
-	
-	if(retcode != 0) Dlg->Log(I_INFO, "Ipconfig/Renew return %d", retcode);
-	else Dlg->status = DHCPED;	
+	if(Config.m_bDHCP) {
+		retcode = Dlg->IpconfigRenew();	
+		if(retcode != 0) Dlg->Log(I_INFO, "Ipconfig/Renew return %d", retcode);
+		else Dlg->status = DHCPED;	
+	}
 	
 	if(retcode == 0 && (Config.m_bWebAuth && Config.m_csWebAuthUrl.GetLength() > 0)){
 		Dlg->status = HTTPING;
@@ -640,8 +645,11 @@ DWORD WINAPI CLuzj_ZTEDlg::IpconfigRenew()
 
 	for(i = 0; i < pIfTable->NumAdapters; i++) {
 		wcstombs(adaptername, pIfTable->Adapter[i].Name, MAX_ADAPTER_NAME);
-		
+
 		if(stricmp(adaptername, ToTCPName(Config.m_csNetCard)) == 0) {
+
+			EnableDHCP(GetGUID(adaptername), true);
+			
 			while(1) {
 				if(count <= MAX_DHCP_TIMES) Log(I_INFO, "fetching IP address by DHCP...");	
 				IpReleaseAddress(&pIfTable->Adapter[i]);
@@ -670,6 +678,40 @@ DWORD WINAPI CLuzj_ZTEDlg::IpconfigRenew()
 	return 0;
 }
 
+typedef BOOL (WINAPI *DHCPNOTIFYPROC)(
+    LPWSTR lpwszServerName, // 本地机器为NULL
+    LPWSTR lpwszAdapterName, // 适配器名称
+    BOOL bNewIpAddress, // TRUE表示更改IP
+    DWORD dwIpIndex, // 指明第几个IP地址，如果只有该接口只有一个IP地址则为0
+    DWORD dwIpAddress, // IP地址
+    DWORD dwSubNetMask, // 子网掩码
+    int nDhcpAction ); // 对DHCP的操作 0:不修改, 1:启用 DHCP，2:禁用 DHCP
+
+
+bool CLuzj_ZTEDlg::EnableDHCP(const char* szAdapterName, const bool enable)
+{
+	bool			bResult = false;
+	HINSTANCE		hDhcpDll;
+	DHCPNOTIFYPROC	pDhcpNotifyProc;
+	WCHAR wcAdapterName[256];
+
+	//mbstowcs(wcAdapterName, szAdapterName, strlen(szAdapterName));
+	MultiByteToWideChar(CP_ACP, 0, szAdapterName, -1, wcAdapterName,256);
+			
+	if((hDhcpDll = LoadLibrary("dhcpcsvc.dll")) == NULL)
+		return false;
+
+	if((pDhcpNotifyProc = (DHCPNOTIFYPROC)GetProcAddress(hDhcpDll, "DhcpNotifyConfigChange")) != NULL) {
+		if((pDhcpNotifyProc)(NULL, wcAdapterName, FALSE, 0, 0, 0, enable?1:2) == ERROR_SUCCESS) {
+			bResult = true;
+		}
+	}
+
+	FreeLibrary(hDhcpDll);
+	
+	return bResult;
+}
+
 void CLuzj_ZTEDlg::Log (int level, const char *fmt, ...)
 {
 
@@ -691,7 +733,7 @@ void CLuzj_ZTEDlg::Log (int level, const char *fmt, ...)
     editLog->ReplaceSel(szTime);
 	editLog->SendMessage(WM_VSCROLL,SB_BOTTOM,0);
 
-	if(level == I_WARN) SetBubble("警告", szTime);
+	if(level == I_WARN) SetBubble("Warnning", szTime);
 	if(level == I_ERR) AfxMessageBox(szTime, MB_ICONSTOP, 0);
 }
 

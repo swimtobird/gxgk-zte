@@ -141,6 +141,8 @@ BEGIN
                     WS_TABSTOP,323,102,48,10
     CONTROL         "快速过滤无响应网卡",IDC_CHK_AUTO_FILTER,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,14,131,88,10
+    CONTROL         "自动获取IP地址",IDC_CHK_DHCP,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,109,131,72,10
 END
 
 

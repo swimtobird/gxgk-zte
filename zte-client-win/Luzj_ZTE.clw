@@ -13,9 +13,9 @@ Class2=CLuzj_ZTEDlg
 Class3=CSettingDlg
 
 ResourceCount=3
-Resource1=IDD_SETTING
+Resource1=IDD_LUZJ_ZTE_DIALOG
 Resource2=IDR_MAINFRAME
-Resource3=IDD_LUZJ_ZTE_DIALOG
+Resource3=IDD_SETTING
 
 [CLS:CLuzj_ZTEApp]
 Type=0
@@ -55,7 +55,7 @@ Control15=IDC_EDIT_LOG,edit,1352730692
 [DLG:IDD_SETTING]
 Type=1
 Class=CSettingDlg
-ControlCount=30
+ControlCount=31
 Control1=IDOK,button,1342242817
 Control2=IDCANCEL,button,1342242816
 Control3=IDC_CHK_AUTOLOGON,button,1342242819
@@ -86,6 +86,7 @@ Control27=IDC_CHK_AUTO_UPDATE,button,1342242819
 Control28=IDC_BTN_AUTO_UPDATE,button,1342242816
 Control29=IDC_CHK_DEBUG,button,1342242819
 Control30=IDC_CHK_AUTO_FILTER,button,1342242819
+Control31=IDC_CHK_DHCP,button,1342242819
 
 [CLS:CSettingDlg]
 Type=0
