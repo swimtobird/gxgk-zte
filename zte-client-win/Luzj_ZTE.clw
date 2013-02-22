@@ -35,7 +35,7 @@ LastObject=CLuzj_ZTEDlg
 [DLG:IDD_LUZJ_ZTE_DIALOG]
 Type=1
 Class=CLuzj_ZTEDlg
-ControlCount=15
+ControlCount=16
 Control1=IDC_START,button,1476460544
 Control2=IDC_PWD,edit,1350631584
 Control3=IDC_NETCARD,combobox,1344339971
@@ -51,6 +51,7 @@ Control12=IDC_SPLIT,static,1073741832
 Control13=IDC_USERNAME,combobox,1344339970
 Control14=IDC_REMEMBER,button,1342242819
 Control15=IDC_EDIT_LOG,edit,1352730692
+Control16=IDC_WEB_AUTH,button,1342242816
 
 [DLG:IDD_SETTING]
 Type=1

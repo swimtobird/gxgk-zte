@@ -11,6 +11,7 @@
 #define IDI_FAULT                       138
 #define IDC_START                       1000
 #define IDC_USER                        1001
+#define IDC_WEB_AUTH                    1001
 #define IDC_PWD                         1002
 #define IDC_NETCARD                     1003
 #define IDC_DOWHILE                     1005

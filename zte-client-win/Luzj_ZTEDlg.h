@@ -59,6 +59,7 @@ public:
 	time_t			m_startTime;			//认证的开始时间
 	HANDLE			m_AuthThread;			//认证的线程句柄,以便控制线程
 	HANDLE			m_DHCPThread;			//DHCP的线程句柄,以便控制线程
+	HANDLE			m_WebAuthThread;		//网页认证守护线程,以便控制线程
 	RECT			m_rc;					//存放着窗体的矩形区域
 
     pcap_t			* m_adapterHandle;		//适配器句柄
@@ -82,6 +83,7 @@ public:
 		
 	char*	HttpAuth(BOOL bForce);
 	void	UpdateStatus(bool bOnline);
+	void	StartWebAuth(BOOL flag);
 	char *	GetOSVersion();
 	char *	GetAdapterInfo(const char *descript);
 	static char *	GetGUID(const char *name);
@@ -91,6 +93,7 @@ public:
 
 	static void	get_packet(u_char *args, const struct pcap_pkthdr *pcaket_header, const u_char *packet);
 	static DWORD WINAPI eap_thread(void *para);
+	static DWORD WINAPI web_auth_thread(void *para);
 	static DWORD WINAPI dhcp_thread(void *para);
 	DWORD WINAPI GetMacIP(const char *adaptername, char *ip, unsigned char *mac);
 	DWORD WINAPI IpconfigRenew();
@@ -128,6 +131,7 @@ protected:
 	afx_msg void OnSetting();
 	afx_msg void OnLogshow();
 	afx_msg void OnSelchangeUsername();
+	afx_msg void OnWebAuth();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
