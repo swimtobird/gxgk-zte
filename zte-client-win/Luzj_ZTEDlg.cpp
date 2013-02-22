@@ -75,12 +75,13 @@ BEGIN_MESSAGE_MAP(CLuzj_ZTEDlg, CDialog)
 	ON_BN_CLICKED(IDC_LOGOFF, OnLogoff)	
 	ON_BN_CLICKED(IDC_EXIT, OnExit)
 	ON_BN_CLICKED(MENU_SHOW, OnTrayShow)
-	ON_BN_CLICKED(MENU_EXIT, OnExit)
 	ON_MESSAGE(WM_USER_TRAY_NOTIFICATION,OnTrayNotification)
 	ON_WM_TIMER()
 	ON_BN_CLICKED(IDC_SETTING, OnSetting)
 	ON_BN_CLICKED(IDC_LOGSHOW, OnLogshow)
 	ON_CBN_SELCHANGE(IDC_USERNAME, OnSelchangeUsername)
+	ON_BN_CLICKED(MENU_EXIT, OnExit)
+	ON_BN_CLICKED(IDC_WEB_AUTH, OnWebAuth)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -161,6 +162,8 @@ BOOL CLuzj_ZTEDlg::OnInitDialog()
 	status = INIT;
 	m_bAuth = FALSE;
 	m_DHCPThread = NULL;
+	m_WebAuthThread = NULL;
+	m_AuthThread = NULL;
 
 	editLog = (CEdit*)GetDlgItem(IDC_EDIT_LOG);
 
@@ -547,26 +550,9 @@ DWORD WINAPI CLuzj_ZTEDlg::dhcp_thread(void *para)
 		else Dlg->status = DHCPED;	
 	}
 	
-	if(retcode == 0 && (Config.m_bWebAuth && Config.m_csWebAuthUrl.GetLength() > 0)){
+	if(retcode == 0 && (Config.m_bWebAuth && Config.m_csWebAuthUrl.GetLength() > 0)){		
 		Dlg->status = HTTPING;
-		char *msg; int i;
-		for(i = 0; i < 3; i++) {
-			if(Dlg->GetMacIP(Config.m_csNetCard, Dlg->m_ip, NULL) == 0) {
-				msg = Dlg->HttpAuth(FALSE);
-				if(strcmp(msg, "null") == 0) {							
-					Dlg->Log(I_MSG, "网页认证成功.");	
-					Dlg->status = HTTPED;
-					if(Config.m_bAutoUpdate) Dlg->CheckUpdate();
-					break;
-				} else {		
-					Dlg->Log(I_INFO, "HttpAuth:%s", msg);			
-				}
-			}
-			Sleep(3000);
-		}
-		if(i >= 3) {
-			Dlg->Log(I_WARN, "网页认证失败，请手动认证");
-		}
+		Dlg->OnWebAuth();		
 	}
 
 	Dlg->Log(I_INFO, "dhcp thread exited.");
@@ -756,14 +742,16 @@ void CLuzj_ZTEDlg::UpdateStatus(bool bOnline)
 	const char *m2[] = {"Offline", "Online"};
 	m_bAuth = bOnline;
 	int i = (bOnline ? 1 : 0);
-	
-	
+		
 	this->Log(I_INFO, "status:%s", m2[i]);
 
 	if(m_bAuth) {
 		m_startTime = time(NULL);
 		//ShowWindow(SW_HIDE);
 	}
+
+	if(m_WebAuthThread) SetDlgItemText(IDC_WEB_AUTH, "停止网页认证");
+	else SetDlgItemText(IDC_WEB_AUTH, "开始网页认证");
 
 	GetDlgItem(IDC_USERNAME)->EnableWindow(!bOnline);
 	GetDlgItem(IDC_PWD)->EnableWindow(!bOnline);
@@ -856,18 +844,20 @@ void CLuzj_ZTEDlg::OnLogoff()
 	pcap_breakloop(m_adapterHandle);
 	//pcap_close(m_adapterHandle);
 
-	this->UpdateStatus(FALSE);
-
 	//等待，如果500ms后没有自动退出，则强制结束
 	if (::WaitForSingleObject(this->m_AuthThread,500) == WAIT_TIMEOUT)	
 	{
-		::TerminateThread(this->m_AuthThread ,0);
+		::TerminateThread(this->m_AuthThread ,0); this->m_AuthThread = NULL;
 	}
-
+	
+	this->StartWebAuth(FALSE);
+	
 	if (::WaitForSingleObject(this->m_DHCPThread,500) == WAIT_TIMEOUT)	
 	{
-		::TerminateThread(this->m_AuthThread ,0);
+		::TerminateThread(this->m_AuthThread ,0); this->m_DHCPThread = NULL;
 	}
+
+	this->UpdateStatus(FALSE);
 
 	Log(I_MSG, "中兴认证注销.");
 	this->status = OFFLINE;
@@ -1007,4 +997,66 @@ int CLuzj_ZTEDlg::TestAdapter(const char *name)
 		pcap_close(handle); return -5;
 	}
 	pcap_close(handle); return 0;
+}
+
+void CLuzj_ZTEDlg::OnWebAuth() 
+{
+	// TODO: Add your control notification handler code here
+	if(m_WebAuthThread) {
+		StartWebAuth(FALSE);		
+	} else {
+		StartWebAuth(TRUE);		
+	}
+	UpdateStatus(TRUE);
+}
+
+void CLuzj_ZTEDlg::StartWebAuth(BOOL flag)
+{
+	if(flag) {
+		if(m_WebAuthThread) {
+			TerminateThread(m_WebAuthThread, 0); m_WebAuthThread = NULL;			
+			Log(I_INFO, "terminate web auth thread before restart.");
+		}
+		m_WebAuthThread = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)web_auth_thread, this, 0, NULL);
+		Log(I_INFO, "start web auth thread.");
+	} else {
+		if(m_WebAuthThread) {
+			TerminateThread(m_WebAuthThread, 0); m_WebAuthThread = NULL;		
+			Log(I_INFO, "terminated web auth thread.");
+		} else {
+			Log(I_INFO, "web auth thread already exited.");
+		}
+	}
+}
+
+DWORD CLuzj_ZTEDlg::web_auth_thread(void *para)
+{
+	CLuzj_ZTEDlg* Dlg = (CLuzj_ZTEDlg*)para;
+	
+	char *msg;
+	bool checked = false;
+	bool showed = false;
+	
+	while(1) {
+		if(Dlg->GetMacIP(Config.m_csNetCard, Dlg->m_ip, NULL) == 0) {
+			msg = Dlg->HttpAuth(FALSE);
+			if(strcmp(msg, "null") == 0) {	
+				if(!showed)	{
+					Dlg->Log(I_MSG, "网页认证成功.");	showed = true;
+					Dlg->status = HTTPED;
+				}				
+				if(!checked && Config.m_bAutoUpdate) {
+					Dlg->CheckUpdate();				
+					checked = true;
+				}
+			} else {	
+				Dlg->Log(I_INFO, "HttpAuth:%s", msg);			
+			}
+		}
+		Sleep(3000);
+	}
+	
+	Dlg->Log(I_INFO, "web auth thread exited.");
+	Dlg->m_WebAuthThread = NULL;
+	return 0;
 }
