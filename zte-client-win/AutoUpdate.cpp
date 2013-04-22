@@ -69,7 +69,7 @@ int AutoUpdate()
 		GetTempFileName(szTempPath, "zte", 0, szTempName);
 		strcat(szTempName, ".exe");
 
-		if(DownLoadFile(szTempName, GOOGLE_CODE_URL_ZTE) != 0) return -2;
+		if(DownLoadFile(szTempName, GOOGLE_CODE_URL_ZTE, NULL, 0) != 0) return -2;
 		if(IDOK != AfxMessageBox("更新认证客户端期间可能短暂无法使用网络，请备份好数据，然后按“确定”开始更新。",
 			MB_OK | MB_ICONINFORMATION)) {
 			return 2;
@@ -99,7 +99,7 @@ int AutoUpdate()
 	return 4;
 }
 
-int DownLoadFile(const char *savename, const char *url, const char *ip)
+int DownLoadFile(const char *savename, const char *url, const char *ip, const int timeout)
 {
 	FILE *file = NULL;
 	file = fopen(savename, "wb");
@@ -114,6 +114,7 @@ int DownLoadFile(const char *savename, const char *url, const char *ip)
 		curl_easy_setopt(curl, CURLOPT_URL, url);		
 		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
 		if(ip) curl_easy_setopt(curl, CURLOPT_INTERFACE, ip);
+		if(timeout > 0) curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);//认证之前会自动转跳
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_file_data);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)file);
@@ -135,7 +136,7 @@ int DownLoadFile(const char *savename, const char *url, const char *ip)
 	return 0;
 }
 
-int DownLoadFileToBuffer(char *buffer, int size, const char *url, const char *ip)
+int DownLoadFileToBuffer(char *buffer, int size, const char *url, const char *ip, const int timeout, const char *cookies)
 {
 	CURL *curl;
 	CURLcode res;
@@ -152,19 +153,24 @@ int DownLoadFileToBuffer(char *buffer, int size, const char *url, const char *ip
 		//curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);			
 		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
 		curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");	
+		if(cookies)  curl_easy_setopt(curl, CURLOPT_COOKIE, cookies); 		
 		if(ip) curl_easy_setopt(curl, CURLOPT_INTERFACE, ip);
+		if(timeout > 0) curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);//认证之前会自动转跳
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_buffer_data);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&buf);
 		res = curl_easy_perform(curl);		
-		/*
-		if(res == CURLE_OK) {			
-			res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE , &retcode); 
-			if(res == CURLE_OK && retcode == 200) {				
-				
-			}
+		
+		if(res != CURLE_OK && res != CURLE_WRITE_ERROR) {
+			if(res == CURLE_OPERATION_TIMEDOUT) return -1;
+			return -2;
 		}
-		*/
+
+		res = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE , &retcode); 
+		if(res != CURLE_OK || retcode != 200) {
+			return -3;
+		}
+		
 		/* always cleanup */ 
 		curl_easy_cleanup(curl);
 	}

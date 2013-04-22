@@ -22,9 +22,10 @@ public:
 	//{{AFX_DATA(CSettingDlg)
 	enum { IDD = IDD_SETTING };	
 	CHyperLink	m_url;
+	CHyperLink	m_author_url;
 	//}}AFX_DATA
 
-
+	CWnd *parent;
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CSettingDlg)
@@ -41,11 +42,9 @@ protected:
 	virtual void OnOK();
 	afx_msg void OnChkWebAuth();
 	afx_msg void OnChkWebLogout();
-	afx_msg void OnChkEnableWebaccount();
-	afx_msg void OnChkReauthTime();
-	afx_msg void OnKillfocusTxtReauthTime();
-	afx_msg void OnChkAutoUpdate();
+	afx_msg void OnChkEnableWebaccount();		
 	afx_msg void OnBtnAutoUpdate();
+	afx_msg void OnChkHttpHeart();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
