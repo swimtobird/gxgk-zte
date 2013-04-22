@@ -19,7 +19,7 @@ int AutoUpdate();
 FileInfo *GetFileModifyTime();
 FileInfo *GetHttpModifyTime(const char *url);
 char *RandomSessionID(const char *url);
-int DownLoadFile(const char *savename, const char *url, const char *ip = NULL);
-int DownLoadFileToBuffer(char *buffer, int size, const char *url, const char *ip = NULL);
+int DownLoadFile(const char *savename, const char *url, const char *ip, const int timeout);
+int DownLoadFileToBuffer(char *buffer, int size, const char *url, const char *ip, const int timeout, const char *cookies);
 
 #endif

@@ -72,8 +72,10 @@ void CConfig::SaveConfig()
 	char szTemp[MAX_STRING];
 	GetFullPathToFile(pszFullPath,pszFilename);
 	
-	sprintf(szTemp,"%d",m_iTimeout);
-	WritePrivateProfileString("config","Timeout",szTemp,pszFullPath);
+	//LOAD_CONFIG_INT_NAME_VAR("HeartInterval", m_iHeartInterval, 30);
+#define WRITE_CONFIG_INT_NAME_VAR(n, v)  {sprintf(szTemp,"%d",v);WritePrivateProfileString("config", n, szTemp, pszFullPath);}
+	WRITE_CONFIG_INT_NAME_VAR("Timeout", m_iTimeout);
+	WRITE_CONFIG_INT_NAME_VAR("HeartInterval", m_iHeartInterval);	
 
 #define WRITE_CONFIG_BOOL_NAME_VAR(n, v)  WritePrivateProfileString("config", n, v?"1":"0", pszFullPath);
 
@@ -89,6 +91,7 @@ void CConfig::SaveConfig()
 	WRITE_CONFIG_BOOL_NAME_VAR("AutoFilter", m_bAutoFilter);
 	WRITE_CONFIG_BOOL_NAME_VAR("Debug", m_bDebug);
 	WRITE_CONFIG_BOOL_NAME_VAR("DHCP", m_bDHCP);
+	WRITE_CONFIG_BOOL_NAME_VAR("HttpHeart", m_bHttpHeart);
 
 	HKEY hRun;
 	LONG kResult = ::RegOpenKeyEx(	HKEY_CURRENT_USER ,
@@ -122,6 +125,8 @@ void CConfig::SaveConfig()
 
 #define WRITE_CONFIG_STRING_NAME_VAR(n, v)  WritePrivateProfileString("config", n, v, pszFullPath);
 
+	WRITE_CONFIG_STRING_NAME_VAR("HeartUrl", m_csHeartUrl);
+	WRITE_CONFIG_STRING_NAME_VAR("HeartCookies", m_csHeartCookies);
 	WRITE_CONFIG_STRING_NAME_VAR("ReauthTime", m_csReauthTime);
 	WRITE_CONFIG_STRING_NAME_VAR("netcard", m_csNetCard);
 	WRITE_CONFIG_STRING_NAME_VAR("WebAuthUrl", m_csWebAuthUrl);
@@ -149,22 +154,25 @@ void CConfig::LoadConfig()
 	char pszFilename[MAX_STRING]=CONFIGNAME;
 	GetFullPathToFile(pszFullPath,pszFilename);
 	
-	m_iTimeout=GetPrivateProfileInt("config","Timeout",10,pszFullPath);
+#define LOAD_CONFIG_INT_NAME_VAR(n, v, d) v=(GetPrivateProfileInt("config",n,d,pszFullPath));
+
+	LOAD_CONFIG_INT_NAME_VAR("Timeout", m_iTimeout, 10);
+	LOAD_CONFIG_INT_NAME_VAR("HeartInterval", m_iHeartInterval, 30);
 
 #define LOAD_CONFIG_BOOL_NAME_VAR(n, v, d) v=(GetPrivateProfileInt("config",n,d,pszFullPath)==1);
 
 	LOAD_CONFIG_BOOL_NAME_VAR("RememberPWD", m_bRememberPWD, 1);
 	LOAD_CONFIG_BOOL_NAME_VAR("WebAuth", m_bWebAuth, 1);
-	LOAD_CONFIG_BOOL_NAME_VAR("WebLogout", m_bWebLogout, 0);
+	LOAD_CONFIG_BOOL_NAME_VAR("WebLogout", m_bWebLogout, 1);
 	LOAD_CONFIG_BOOL_NAME_VAR("Autorun", m_bAutorun, 1);
 	LOAD_CONFIG_BOOL_NAME_VAR("Autologon", m_bAutologon, 0);
 	LOAD_CONFIG_BOOL_NAME_VAR("ShowBubble", m_bShowBubble, 1);
 	LOAD_CONFIG_BOOL_NAME_VAR("EnableWebAccount", m_bEnableWebAccount, 0);
-	LOAD_CONFIG_BOOL_NAME_VAR("Reauth", m_bReauth, 1);
 	LOAD_CONFIG_BOOL_NAME_VAR("AutoUpdate", m_bAutoUpdate, 0);
 	LOAD_CONFIG_BOOL_NAME_VAR("Debug", m_bDebug, 1);
 	LOAD_CONFIG_BOOL_NAME_VAR("AutoFilter", m_bAutoFilter, 1);
 	LOAD_CONFIG_BOOL_NAME_VAR("DHCP", m_bDHCP, 1);
+	LOAD_CONFIG_BOOL_NAME_VAR("HttpHeart", m_bHttpHeart, 1);
 	
 	//读取所有账号密码参数
 	char szTemp[MAX_STRING];
@@ -176,18 +184,22 @@ void CConfig::LoadConfig()
 	while(*p) {
 		strncpy(user,p, MAX_STRING);
 		GetPrivateProfileString("users", user, "", pass, MAX_STRING,pszFullPath);
-		Config.m_UserInfo[user] = aes_decrypt(pass);
+		char *szPass = aes_decrypt(pass);
+		if(szPass == NULL) Config.m_UserInfo[user] = "";
+		else Config.m_UserInfo[user] = aes_decrypt(pass);
 		while(*p++);
 	}
 
 #define LOAD_CONFIG_STRING_NAME_VAR(n, v, d) {char t[MAX_STRING];GetPrivateProfileString("config",n,d,t,MAX_STRING,pszFullPath);v=t;}
 
+	LOAD_CONFIG_STRING_NAME_VAR("HeartUrl", m_csHeartUrl, "http://bbs.gxgk.cc/index.php");
+	LOAD_CONFIG_STRING_NAME_VAR("HeartCookies", m_csHeartCookies, "");
 	LOAD_CONFIG_STRING_NAME_VAR("LastUser", m_csLastUser, "");
 	LOAD_CONFIG_STRING_NAME_VAR("netcard", m_csNetCard, "");
 	LOAD_CONFIG_STRING_NAME_VAR("WebAuthUrl", m_csWebAuthUrl, "http://125.88.59.131:10001/login.do?edubas=113.98.13.29");
 	LOAD_CONFIG_STRING_NAME_VAR("WebLogoutUrl", m_csWebLogoutUrl, "http://125.88.59.131:10001/Logout.do?edubas=113.98.13.29");
 	LOAD_CONFIG_STRING_NAME_VAR("WebUsername", m_csWebUsername, "");
-	LOAD_CONFIG_STRING_NAME_VAR("WebPassword", m_csWebPassword, "");m_csWebPassword=aes_decrypt(m_csWebPassword);
+	LOAD_CONFIG_STRING_NAME_VAR("WebPassword", m_csWebPassword, "");m_csWebPassword = CString(aes_decrypt(m_csWebPassword));
 	LOAD_CONFIG_STRING_NAME_VAR("ReauthTime", m_csReauthTime, "");
 }
 

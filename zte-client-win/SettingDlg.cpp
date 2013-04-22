@@ -59,6 +59,7 @@ void CSettingDlg::DoDataExchange(CDataExchange* pDX)
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CSettingDlg)
 	DDX_Control(pDX, IDC_WEBURL, m_url);
+	DDX_Control(pDX, IDC_AUTHOR_URL, m_author_url);
 	//}}AFX_DATA_MAP
 }
 
@@ -67,10 +68,9 @@ BEGIN_MESSAGE_MAP(CSettingDlg, CDialog)
 	//{{AFX_MSG_MAP(CSettingDlg)
 	ON_BN_CLICKED(IDC_CHK_WEB_AUTH, OnChkWebAuth)
 	ON_BN_CLICKED(IDC_CHK_WEB_LOGOUT, OnChkWebLogout)
-	ON_BN_CLICKED(IDC_CHK_ENABLE_WEBACCOUNT, OnChkEnableWebaccount)
-	ON_BN_CLICKED(IDC_CHK_REAUTH_TIME, OnChkReauthTime)
-	ON_EN_KILLFOCUS(IDC_TXT_REAUTH_TIME, OnKillfocusTxtReauthTime)
+	ON_BN_CLICKED(IDC_CHK_ENABLE_WEBACCOUNT, OnChkEnableWebaccount)	
 	ON_BN_CLICKED(IDC_BTN_AUTO_UPDATE, OnBtnAutoUpdate)
+	ON_BN_CLICKED(IDC_CHK_HTTP_HEART, OnChkHttpHeart)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -91,32 +91,34 @@ BOOL CSettingDlg::OnInitDialog()
 	CheckDlgButton(IDC_CHK_WEB_AUTH,Config.m_bWebAuth?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHK_WEB_LOGOUT,Config.m_bWebLogout?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHK_ENABLE_WEBACCOUNT,Config.m_bEnableWebAccount?BST_CHECKED:BST_UNCHECKED);
-	CheckDlgButton(IDC_CHK_REAUTH_TIME,Config.m_bReauth?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHK_AUTO_UPDATE,Config.m_bAutoUpdate?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHK_DEBUG,Config.m_bDebug?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHK_AUTO_FILTER,Config.m_bAutoFilter?BST_CHECKED:BST_UNCHECKED);
 	CheckDlgButton(IDC_CHK_DHCP,Config.m_bDHCP?BST_CHECKED:BST_UNCHECKED);
+	CheckDlgButton(IDC_CHK_HTTP_HEART,Config.m_bHttpHeart?BST_CHECKED:BST_UNCHECKED);
 
 
 	char szTemp[MAX_STRING];
 	sprintf(szTemp,"%d",Config.m_iTimeout);
 	GetDlgItem(IDC_TIMEOUT)->SetWindowText(szTemp);
 
+	sprintf(szTemp,"%d",Config.m_iHeartInterval);
+	GetDlgItem(IDC_HTTP_HEART_INTERVAL)->SetWindowText(szTemp);
+
 	GetDlgItem(IDC_WEB_AUTH_URL)->SetWindowText(Config.m_csWebAuthUrl);
 	GetDlgItem(IDC_WEB_LOGOUT_URL)->SetWindowText(Config.m_csWebLogoutUrl);
 	GetDlgItem(IDC_WEB_USERNAME)->SetWindowText(Config.m_csWebUsername);
 	GetDlgItem(IDC_WEB_PASSWORD)->SetWindowText(Config.m_csWebPassword);
-	GetDlgItem(IDC_TXT_REAUTH_TIME)->SetWindowText(Config.m_csReauthTime);
-			
-
+	GetDlgItem(IDC_WEB_HEART_URL)->SetWindowText(Config.m_csHeartUrl);
+	GetDlgItem(IDC_WEB_HEART_COOKIES)->SetWindowText(Config.m_csHeartCookies);
 	
-	m_url.SetURL(STR_WebUrl);
+	m_url.SetURL(STR_WEB_URL); m_author_url.SetURL(STR_AUTHOR_URL);
 	GetDlgItem(IDC_VERSION)->SetWindowText(STR_AppName"       "STR_Version);
 
 	OnChkWebAuth();
 	OnChkWebLogout();
 	OnChkEnableWebaccount();
-	OnChkReauthTime();
+	OnChkHttpHeart();
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
@@ -132,7 +134,6 @@ void CSettingDlg::OnOK()
 	BIND_BOOL_VAR_CONTROL(Config.m_bShowBubble, IDC_CHK_BUBBLE);
 	BIND_BOOL_VAR_CONTROL(Config.m_bWebLogout, IDC_CHK_WEB_LOGOUT);
 	BIND_BOOL_VAR_CONTROL(Config.m_bEnableWebAccount, IDC_CHK_ENABLE_WEBACCOUNT);
-	BIND_BOOL_VAR_CONTROL(Config.m_bReauth, IDC_CHK_REAUTH_TIME);
 	BIND_BOOL_VAR_CONTROL(Config.m_bAutoUpdate, IDC_CHK_AUTO_UPDATE);
 	BIND_BOOL_VAR_CONTROL(Config.m_bDebug, IDC_CHK_DEBUG);
 	BIND_BOOL_VAR_CONTROL(Config.m_bAutoFilter, IDC_CHK_AUTO_FILTER);
@@ -142,13 +143,17 @@ void CSettingDlg::OnOK()
 	GetDlgItem(IDC_TIMEOUT)->GetWindowText(szTemp,MAX_STRING);
 	Config.m_iTimeout=atoi(szTemp);
 
+	GetDlgItem(IDC_HTTP_HEART_INTERVAL)->GetWindowText(szTemp,MAX_STRING);
+	Config.m_iHeartInterval=atoi(szTemp);
+
 #define BIND_STRING_VAR_CONTROL(v, c) {CString t; GetDlgItem(c)->GetWindowText(t); v = t;}
 
 	BIND_STRING_VAR_CONTROL(Config.m_csWebAuthUrl, IDC_WEB_AUTH_URL);
 	BIND_STRING_VAR_CONTROL(Config.m_csWebLogoutUrl, IDC_WEB_LOGOUT_URL);
 	BIND_STRING_VAR_CONTROL(Config.m_csWebUsername, IDC_WEB_USERNAME);
 	BIND_STRING_VAR_CONTROL(Config.m_csWebPassword, IDC_WEB_PASSWORD);
-	BIND_STRING_VAR_CONTROL(Config.m_csReauthTime, IDC_TXT_REAUTH_TIME);
+	BIND_STRING_VAR_CONTROL(Config.m_csHeartUrl, IDC_WEB_HEART_URL);
+	BIND_STRING_VAR_CONTROL(Config.m_csHeartCookies, IDC_WEB_HEART_COOKIES);
 
 	Config.SaveConfig();
 	CDialog::OnOK();
@@ -189,37 +194,26 @@ void CSettingDlg::OnChkEnableWebaccount()
 	}
 }
 
-void CSettingDlg::OnChkReauthTime() 
-{
-	// TODO: Add your control notification handler code here
-	if(IsDlgButtonChecked(IDC_CHK_REAUTH_TIME))
-	{
-		GetDlgItem(IDC_TXT_REAUTH_TIME)->EnableWindow(TRUE);		
-	}else{
-		GetDlgItem(IDC_TXT_REAUTH_TIME)->EnableWindow(FALSE);		
-	}
-}
-
-void CSettingDlg::OnKillfocusTxtReauthTime() 
-{
-	// TODO: Add your control notification handler code here
-	char szTemp[MAX_STRING];
-	int hour,min,second;
-	CWnd *wndReauthTime = GetDlgItem(IDC_TXT_REAUTH_TIME);
-	wndReauthTime->GetWindowText(szTemp,MAX_STRING);
-	if(sscanf(szTemp, "%d:%d:%d", &hour, &min, &second) != 3) {
-		AfxMessageBox("格式错误！时间修改无效！样例：23:30:00", MB_SYSTEMMODAL);
-	}
-}
-
 void CSettingDlg::OnBtnAutoUpdate() 
 {
 	// TODO: Add your control notification handler code here
-	CWnd *parent = this->GetParent();
-	if(parent != NULL) {
-		CLuzj_ZTEDlg *Dlg = (CLuzj_ZTEDlg *)parent;
+	CLuzj_ZTEDlg *Dlg = (CLuzj_ZTEDlg *)parent;	
+	if(Dlg != NULL) {		
 		if(Dlg->CheckUpdate() == 2) {
 			AfxMessageBox("这已经是最新版本的了！");
 		}
+	}
+}
+
+void CSettingDlg::OnChkHttpHeart() 
+{
+	// TODO: Add your control notification handler code here
+	if(IsDlgButtonChecked(IDC_CHK_HTTP_HEART))
+	{
+		GetDlgItem(IDC_WEB_HEART_URL)->EnableWindow(TRUE);
+		GetDlgItem(IDC_WEB_HEART_COOKIES)->EnableWindow(TRUE);
+	}else{
+		GetDlgItem(IDC_WEB_HEART_URL)->EnableWindow(FALSE);
+		GetDlgItem(IDC_WEB_HEART_COOKIES)->EnableWindow(FALSE);
 	}
 }

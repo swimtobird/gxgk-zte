@@ -1,7 +1,7 @@
 #define VER_Major    1
 #define VER_Minor    0
-#define VER_Release    130   
-#define VER_Build    452  
+#define VER_Release    273   
+#define VER_Build    769  
 #define VER_Version    MAKELONG(MAKEWORD(VER_Major, VER_Minor), VER_Release)
 
 #define _Stringizing(v)    #v
@@ -11,8 +11,6 @@
 #define STR_BuildTime    TEXT(__TIME__)
 #define STR_BuilDateTime  TEXT(__DATE__) TEXT(" ") TEXT(__TIME__)
 #define STR_Version    TEXT(_VerJoin(VER_Major, VER_Minor, VER_Release, VER_Build))
-
-
 
 
 #define MAX_STRING 2048
@@ -28,8 +26,9 @@
 //#define STR_Author    TEXT("ZWZ")
 //#define STR_Corporation    TEXT("ZWZ's Studio")
 
-#define STR_Web      TEXT("bbs.gxgk.cc/")
-#define STR_WebUrl    TEXT("http://") STR_Web
+#define STR_WEB      TEXT("bbs.gxgk.cc/")
+#define STR_WEB_URL    TEXT("http://") STR_WEB
+#define STR_AUTHOR_URL	STR_WEB_URL TEXT("space-uid-207.html")
 //#define STR_EmailUrl    TEXT("mailto:") STR_Email TEXT("?Subject=ZWZZte")
 
 #ifdef _CHS

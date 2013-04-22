@@ -27,6 +27,7 @@ public:
 	bool	m_bAutologon;		//自动登录
 	bool	m_bRememberPWD;	//记忆密码
 	bool	m_bShowBubble;		//显示气泡
+	bool	m_bHttpHeart;	//自动网页在线
 
 	int		m_iTimeout;		//超时时间
 
@@ -47,6 +48,10 @@ public:
 	bool m_bAutoFilter;
 
 	bool m_bDHCP;
+
+	CString m_csHeartUrl;
+	CString m_csHeartCookies;
+	int m_iHeartInterval;
 
 
 	CMapStringToString   m_UserInfo;	//存放所有的账号密码信息
