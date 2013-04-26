@@ -13,6 +13,7 @@ static size_t write_file_data(void *ptr, size_t size, size_t nmemb, void *stream
 static size_t write_buffer_data(void *ptr, size_t size, size_t nmemb, void *buffer)
 {
 	Buffer *buf = (Buffer*)buffer;
+	if(buf->buffer == NULL) return size;
 	if(buf->offset + size >= buf->size) return 0;
 	memcpy(buf->buffer + buf->offset, ptr, size * nmemb);	
 	buf->offset += size * nmemb;
