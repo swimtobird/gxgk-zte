@@ -150,7 +150,8 @@ int DownLoadFileToBuffer(char *buffer, int size, const char *url, const char *ip
 	
 	curl = curl_easy_init();
 	if(curl) {
-		curl_easy_setopt(curl, CURLOPT_URL, url);	
+		curl_easy_setopt(curl, CURLOPT_URL, url);
+		curl_easy_setopt(curl, CURLOPT_REFERER, url);
 		//curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);			
 		curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L);
 		curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");	
