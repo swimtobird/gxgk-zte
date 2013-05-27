@@ -1,5 +1,20 @@
 for Linux:
-需要预先配置好编译环境，直接执行make即可
+just make.
 
 for openwrt:
-需要预先配置好交叉编译环境，修改Makefile.openwrt其中的编译器CC参数为适合的名字，执行make -f Makefile.openwrt即可
+you should have your cross ploatform compiler and create corresponding link file
+
+if platfrom is rg100a
+cc is openwrt-gcc-rg100a
+cxx is openwrt-g++-rg100a
+and execute "make PF=rg100a"
+
+if platform is hg255d
+cc is openwrt-gcc-hg255d
+cxx is openwrt-g++-hg255d
+and execute "make PF=hg255d"
+
+by default
+cc is gcc
+cxx is g++
+

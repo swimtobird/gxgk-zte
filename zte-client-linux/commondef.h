@@ -47,7 +47,6 @@
 #endif
 
 #include <getopt.h>
-#include <iconv.h>
 
 /* ZTE Version */
 #define ZTE_VER "0.1"

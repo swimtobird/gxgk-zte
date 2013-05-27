@@ -38,8 +38,18 @@ EXECUTABLE      := zte-client
 SOURCES         := md5.c  rc4.c  eap_protocol.c  zte.c main.c
 
 # ------------  compiler  ------------------------------------------------------
+ifeq ($(PF),rg100a)
+CC              := openwrt-gcc-rg100a
+CXX             := openwrt-g++-rg100a
+else
+ifeq ($(PF),hg255d)
+CC              := openwrt-gcc-hg255d
+CXX             := openwrt-g++-hg255d
+else
 CC              := gcc
 CXX             := g++
+endif
+endif
 
 # ------------  compiler flags  ------------------------------------------------
 DEBUG_CFLAGS    := -w -O0 -g
