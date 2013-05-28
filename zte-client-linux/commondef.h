@@ -63,15 +63,15 @@
 //#define ETHER_ADDR_LEN 6
 
 struct eap_header {
-    u_char eapol_v;
-    u_char eapol_t;
-    u_short eapol_length;
-    u_char eap_t;
-    u_char eap_id;
-    u_short eap_length;
-    u_char eap_op;
-    u_char eap_v_length;
-    u_char eap_md5_challenge[16];
+    u_char eapol_v;//0
+    u_char eapol_t;//1
+    u_short eapol_length;//2
+    u_char eap_t;//4
+    u_char eap_id;//5
+    u_short eap_length;//6
+    u_char eap_op;//8
+    u_char eap_v_length;//9
+    u_char eap_md5_challenge[16];//10
 };
 
 enum EAPOL_TYPE{
@@ -90,6 +90,7 @@ enum EAPType {
     EAP_RESPONSE_MD5_CHALLENGE,
     EAP_SUCCESS,
     EAP_FAILURE,
+    EAP_KEEP_ALIVE,
     RUIJIE_EAPOL_MSG,
     ERROR
 };

@@ -39,7 +39,7 @@ uint8_t             eapol_start[1000];            /* EAPOL START报文 */
 uint8_t             eapol_logoff[1000];           /* EAPOL LogOff报文 */
 uint8_t             eap_response_ident[1000]; /* EAP RESPON/IDENTITY报文 */
 uint8_t             eap_response_md5ch[1000]; /* EAP RESPON/MD5 报文 */
-uint8_t             eap_life_keeping[45];
+uint8_t             eap_life_keeping[1000];
 uint32_t            ruijie_live_serial_num;
 uint32_t            ruijie_succes_key;
 extern enum STATE   state;
@@ -60,7 +60,7 @@ action_eapol_success(const struct eap_header *eap_head,
     fprintf(stdout, ">>Protocol: EAP_SUCCESS\n");
 
         
-    print_server_info (packet);
+//    print_server_info (packet);
 
     /* 成为后台守护进程 */
     if (background){
@@ -69,7 +69,7 @@ action_eapol_success(const struct eap_header *eap_head,
     }
 
     /* Set alarm to send keep alive packet */
-    alarm(30);
+//    alarm(30);
 }
 
 void
@@ -211,6 +211,10 @@ send_eap_packet(enum EAPType send_type)
             fprintf(stderr,"&&IMPORTANT: Wrong Send Request Type.%02x\n", send_type);
             return;
     }
+
+//    fprintf(stderr,"&&[debug][eap_response_ident]: frame_length:%d\n", 23 + username_length);
+//    print_hex(eap_response_ident, 23 + username_length);
+
     if (pcap_sendpacket(handle, frame_data, frame_length) != 0)
     {
         fprintf(stderr,"&&IMPORTANT: Error Sending the packet: %s\n", 
