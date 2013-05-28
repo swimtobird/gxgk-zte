@@ -263,16 +263,8 @@ signal_alarm (int signo)
             break;
 
         case STATUS_ERROR:
-            if (exit_counter) {
-                exit_counter--;
-                fprintf(stdout, "Please wait until session ends ... %2d\r", exit_counter);
-                fflush (stdout);
-                alarm(1);
-            }
-            else {
-                fprintf(stdout, "\n&&Info: Program Exit.         \n");
-                pcap_breakloop (handle);
-            }
+            fprintf(stdout, "\n&&Info: Program Exit.         \n");
+            pcap_breakloop (handle);
             break;
 
         default:
