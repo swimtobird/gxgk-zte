@@ -63,10 +63,10 @@ print_hex(const uint8_t *array, int count)
     int i;
     for(i = 0; i < count; i++){
         if ( !(i % 16))
-            printf ("\n");
-        printf("%02x ", array[i]);
+            fprintf (stderr, "\n");
+        fprintf(stderr, "%02x ", array[i]);
     }
-    printf("\n");
+    fprintf(stderr, "\n");
 }
 
 /* 
@@ -102,6 +102,9 @@ get_packet(uint8_t *args, const struct pcap_pkthdr *pcaket_header,
 enum EAPType 
 get_eap_type(const struct eap_header *eap_header) 
 {
+    if(eap_header->eapol_t == EAPOL_KEY) {
+	return EAP_KEEP_ALIVE;
+    }
     switch (eap_header->eap_t){
         case 0x00:
             if ( eap_header->eap_op == 0x1c &&
@@ -139,13 +142,6 @@ action_by_eap_type(enum EAPType pType,
                         const struct eap_header *eap_head,
                         const struct pcap_pkthdr *packetinfo,
                         const uint8_t *packet) {
-//    printf("PackType: %d\n", pType);
-
-//keep alive
-if(eap_head->eapol_t == EAPOL_KEY) {
-	keep_alive(eap_head,packetinfo,packet);
-	return;
-}
     switch(pType){
         case EAP_SUCCESS:
             action_eapol_success (eap_head, packetinfo, packet);
@@ -162,6 +158,9 @@ if(eap_head->eapol_t == EAPOL_KEY) {
         case RUIJIE_EAPOL_MSG:
             print_notification_msg (packet);
             break;
+	case EAP_KEEP_ALIVE:
+	    keep_alive(eap_head,packetinfo,packet);
+	    break;
         default:
             return;
     }
@@ -333,34 +332,34 @@ init_frames()
 
     /* EAP RESPONSE IDENTITY */
     uint8_t eap_resp_iden_head[9] = {0x01, 0x00, 
-                                    0x00, 6 + username_length, /* eapol_length */
+                                    0x00, 0x00, /* eapol_length */
                                     0x02, 0x00, 
-                                    0x00, 6 + username_length, /* eap_length */
+                                    0x00, 0x00, /* eap_length */
                                     0x01};
-    data_index = 0;
-    memcpy (eap_response_ident + data_index, eapol_eth_header, SIZE_ETHERNET);
-    data_index += SIZE_ETHERNET;
-    memcpy (eap_response_ident + data_index, eap_resp_iden_head, sizeof(eap_resp_iden_head));
-    data_index += sizeof(eap_resp_iden_head);
-    memcpy (eap_response_ident + data_index, username, username_length);
+    eap_resp_iden_head[3] = 5 + (uint8_t)username_length;
+    eap_resp_iden_head[7] = 5 + (uint8_t)username_length;
+    memset (eap_response_ident, 0, 1000);
+    memcpy (eap_response_ident, eapol_eth_header, SIZE_ETHERNET);    
+    memcpy (eap_response_ident + SIZE_ETHERNET, eap_resp_iden_head, 9);
+    memcpy (eap_response_ident + SIZE_ETHERNET + 9, username, username_length);
 
 
     /** EAP RESPONSE MD5 Challenge **/
     uint8_t eap_resp_md5_head[10] = {0x01, 0x00, 
-                                   0x00, 6 + 17 + username_length,/* eapol_length */
+                                   0x00, 0x00,/* eapol_length */
                                    0x02, 0x36, 
-                                   0x00, 6 + 17 + username_length,/* eap-length */
+                                   0x00, 0x00,/* eap-length */
                                    0x04, 0x10};
-    data_index = 0;
-    memcpy (eap_response_md5ch + data_index, eapol_eth_header, SIZE_ETHERNET);
-    data_index += SIZE_ETHERNET;
-    memcpy (eap_response_md5ch + data_index, eap_resp_md5_head, sizeof(eap_resp_md5_head));
-    data_index += sizeof(eap_resp_md5_head) + 16;// 剩余16位在收到REQ/MD5报文后由fill_password_md5填充 
-    memcpy (eap_response_md5ch + data_index, username, username_length);
+    eap_resp_md5_head[3] = 22 + (uint8_t)username_length;
+    eap_resp_md5_head[7] = 22 + (uint8_t)username_length;
+    memset (eap_response_md5ch, 0, 1000);
+    memcpy (eap_response_md5ch, eapol_eth_header, SIZE_ETHERNET);
+    memcpy (eap_response_md5ch + SIZE_ETHERNET, eap_resp_md5_head, 10);
+    // 剩余16位在收到REQ/MD5报文后由fill_password_md5填充 
+    memcpy (eap_response_md5ch + SIZE_ETHERNET + 10 + 16, username, username_length);
 
-    /* LIFE KEEP PACKET */
-    memcpy (eap_life_keeping + 0, eapol_eth_header, SIZE_ETHERNET);
-    uint8_t eapol_keep_alive[100]  = { 
+    /* LIFE KEEP PACKET */    
+    uint8_t eapol_keep_alive[52]  = { 
 0x01, //version
 0x03, //type
 0x00, 0x30, //length
@@ -374,8 +373,9 @@ init_frames()
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,	//16字节的Key Signature 后8字节
 0x00,0x00,0x00,0x00							//4字节的Key
 };
-    memcpy (eap_life_keeping + SIZE_ETHERNET, eapol_keep_alive, 52);
-	
+    memset (eap_life_keeping, 0, 1000);
+    memcpy (eap_life_keeping, eapol_eth_header, SIZE_ETHERNET);
+    memcpy (eap_life_keeping + SIZE_ETHERNET, eapol_keep_alive, 52);	
 
 }
 
@@ -397,6 +397,8 @@ show_local_info ()
                         local_mac[3],local_mac[4],local_mac[5]);
     printf("######################################\n");
 }
+
+
 
 #ifndef SIOCGIFHWADDR
 static int bsd_get_mac(const char ifname[], uint8_t eth_addr[])
