@@ -17,6 +17,8 @@
  * =====================================================================================
  */
 
+#ifndef ZTE_H
+#define ZTE_H
 
 #include	"commondef.h"
 
@@ -33,6 +35,10 @@ action_by_eap_type(enum EAPType pType,
 static enum EAPType 
 get_eap_type(const struct eap_header *eap_header);
 
+void print_hex(const uint8_t *array, int count);
+
 #ifndef __linux
 static int bsd_get_mac(const char ifname[], uint8_t eth_addr[]);
+#endif
+
 #endif

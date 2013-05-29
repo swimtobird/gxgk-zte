@@ -62,6 +62,7 @@
 
 //#define ETHER_ADDR_LEN 6
 
+
 struct eap_header {
     u_char eapol_v;//0
     u_char eapol_t;//1
