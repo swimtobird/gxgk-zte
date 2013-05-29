@@ -17,6 +17,9 @@
  * =====================================================================================
  */
 
+#ifndef EAP_PROTOCOL_H
+#define EAP_PROTOCOL_H
+
 #include	"commondef.h"
 
 void
@@ -51,5 +54,5 @@ void
 keep_alive(const struct eap_header *eap_head,
                         const struct pcap_pkthdr *packetinfo,
                         const uint8_t *packet);
-
+#endif
 

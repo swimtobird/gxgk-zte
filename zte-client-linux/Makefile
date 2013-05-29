@@ -35,7 +35,7 @@ PROFILE        := NO
 EXECUTABLE      := zte-client
 
 # ------------  list of all source files  --------------------------------------
-SOURCES         := md5.c  rc4.c  eap_protocol.c  zte.c main.c
+SOURCES         := eap_protocol.cpp  zte.cpp main.cpp
 
 # ------------  compiler  ------------------------------------------------------
 ifeq ($(PF),rg100a)
