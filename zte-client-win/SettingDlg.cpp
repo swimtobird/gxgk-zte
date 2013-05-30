@@ -138,6 +138,7 @@ void CSettingDlg::OnOK()
 	BIND_BOOL_VAR_CONTROL(Config.m_bDebug, IDC_CHK_DEBUG);
 	BIND_BOOL_VAR_CONTROL(Config.m_bAutoFilter, IDC_CHK_AUTO_FILTER);
 	BIND_BOOL_VAR_CONTROL(Config.m_bDHCP, IDC_CHK_DHCP);
+	BIND_BOOL_VAR_CONTROL(Config.m_bHttpHeart, IDC_CHK_HTTP_HEART);
 
 	char szTemp[MAX_STRING];
 	GetDlgItem(IDC_TIMEOUT)->GetWindowText(szTemp,MAX_STRING);
@@ -212,8 +213,10 @@ void CSettingDlg::OnChkHttpHeart()
 	{
 		GetDlgItem(IDC_WEB_HEART_URL)->EnableWindow(TRUE);
 		GetDlgItem(IDC_WEB_HEART_COOKIES)->EnableWindow(TRUE);
+		GetDlgItem(IDC_HTTP_HEART_INTERVAL)->EnableWindow(TRUE);
 	}else{
 		GetDlgItem(IDC_WEB_HEART_URL)->EnableWindow(FALSE);
 		GetDlgItem(IDC_WEB_HEART_COOKIES)->EnableWindow(FALSE);
+		GetDlgItem(IDC_HTTP_HEART_INTERVAL)->EnableWindow(FALSE);
 	}
 }
