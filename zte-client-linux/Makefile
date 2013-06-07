@@ -25,6 +25,9 @@
 #               section 4.13). The utility sed is used.
 #========================================== makefile template version 1.8 ======
 
+#selected platform 
+PF ?= linux
+
 # DEBUG can be set to YES to include debugging info, or NO otherwise
 DEBUG          := NO
 
@@ -32,23 +35,20 @@ DEBUG          := NO
 PROFILE        := NO
 
 # ------------  name of the executable  ----------------------------------------
-EXECUTABLE      := zte-client
+EXECUTABLE      := zte-client-${PF}
 
 # ------------  list of all source files  --------------------------------------
 SOURCES         := eap_protocol.cpp  zte.cpp main.cpp
 
 # ------------  compiler  ------------------------------------------------------
-ifeq ($(PF),rg100a)
-CC              := openwrt-gcc-rg100a
-CXX             := openwrt-g++-rg100a
-else
-ifeq ($(PF),hg255d)
-CC              := openwrt-gcc-hg255d
-CXX             := openwrt-g++-hg255d
-else
+
+
+ifeq ($(PF),linux)
 CC              := gcc
 CXX             := g++
-endif
+else
+CC              := openwrt-gcc-${PF}
+CXX             := openwrt-g++-${PF}
 endif
 
 # ------------  compiler flags  ------------------------------------------------
