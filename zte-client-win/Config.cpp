@@ -192,7 +192,7 @@ void CConfig::LoadConfig()
 
 #define LOAD_CONFIG_STRING_NAME_VAR(n, v, d) {char t[MAX_STRING];GetPrivateProfileString("config",n,d,t,MAX_STRING,pszFullPath);v=t;}
 
-	LOAD_CONFIG_STRING_NAME_VAR("HeartUrl", m_csHeartUrl, "http://bbs.gxgk.cc/index.php");
+	LOAD_CONFIG_STRING_NAME_VAR("HeartUrl", m_csHeartUrl, "http://www.baidu.com/index.php");
 	LOAD_CONFIG_STRING_NAME_VAR("HeartCookies", m_csHeartCookies, "");
 	LOAD_CONFIG_STRING_NAME_VAR("LastUser", m_csLastUser, "");
 	LOAD_CONFIG_STRING_NAME_VAR("netcard", m_csNetCard, "");
